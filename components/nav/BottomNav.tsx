@@ -48,15 +48,33 @@ export default function BottomNav() {
             </Link>
           )
         })}
-        <Link href="/settings" className="flex flex-col items-center gap-1 flex-1 py-1">
-          <motion.div
-            whileTap={{ scale: 0.88 }}
-            className="relative flex items-center justify-center w-10 h-10"
-          >
-            <Settings size={20} className="text-[#8a8f9a]" strokeWidth={1.8} />
-          </motion.div>
-          <span className="text-[10px] font-medium tracking-wide text-[#8a8f9a]">Settings</span>
-        </Link>
+        {(() => {
+          const settingsActive = pathname === '/settings'
+          return (
+            <Link href="/settings" className="flex flex-col items-center gap-1 flex-1 py-1">
+              <motion.div
+                whileTap={{ scale: 0.88 }}
+                className="relative flex items-center justify-center w-10 h-10"
+              >
+                {settingsActive && (
+                  <motion.div
+                    layoutId="nav-pill"
+                    className="absolute inset-0 rounded-xl bg-[#1560FF]/15"
+                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                  />
+                )}
+                <Settings
+                  size={20}
+                  className={settingsActive ? 'text-[#1560FF]' : 'text-[#8a8f9a]'}
+                  strokeWidth={settingsActive ? 2.2 : 1.8}
+                />
+              </motion.div>
+              <span className={`text-[10px] font-medium tracking-wide ${settingsActive ? 'text-[#1560FF]' : 'text-[#8a8f9a]'}`}>
+                Settings
+              </span>
+            </Link>
+          )
+        })()}
       </div>
     </nav>
   )
