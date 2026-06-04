@@ -8,7 +8,11 @@ declare global {
   }
 }
 
-declare const self: ServiceWorkerGlobalScope
+declare const self: ServiceWorkerGlobalScope & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  addEventListener(type: string, listener: (event: any) => void): void
+  registration: ServiceWorkerRegistration
+}
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
@@ -21,7 +25,7 @@ const serwist = new Serwist({
 serwist.addEventListeners()
 
 // Push notification handler
-self.addEventListener('push', (event: PushEvent) => {
+self.addEventListener('push', (event) => {
   const data = event.data?.json() ?? { title: 'FlowOS', body: '' }
   event.waitUntil(
     self.registration.showNotification(data.title, {
@@ -35,8 +39,9 @@ self.addEventListener('push', (event: PushEvent) => {
 })
 
 // Notification click handler
-self.addEventListener('notificationclick', (event: NotificationEvent) => {
+self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   const url = (event.notification.data?.url as string) ?? '/home'
-  event.waitUntil(clients.openWindow(url))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  event.waitUntil((self as any).clients.openWindow(url))
 })

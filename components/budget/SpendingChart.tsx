@@ -51,7 +51,7 @@ export default function SpendingChart() {
             <LabelList
               dataKey="spent"
               position="right"
-              formatter={(v: number) => `$${v}`}
+              formatter={(v: unknown) => `$${v as number}`}
               style={{
                 fill: '#8a8f9a',
                 fontSize: 10,

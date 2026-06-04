@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/gameplan-notify",
+      "schedule": "0 23 * * *"
+    }
+  ]
+}
