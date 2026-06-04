@@ -89,16 +89,17 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
   }
 
   const handleVoice = () => {
-    const SpeechRecognition =
-      (window as typeof window & { SpeechRecognition?: typeof window.SpeechRecognition }).SpeechRecognition ||
-      (window as typeof window & { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition
-    if (!SpeechRecognition) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any
+    const SpeechRecognitionCtor = w.SpeechRecognition || w.webkitSpeechRecognition
+    if (!SpeechRecognitionCtor) {
       showToast('Voice not supported in this browser', 'error')
       return
     }
-    const recognition = new SpeechRecognition()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recognition = new SpeechRecognitionCtor() as any
     recognition.lang = 'en-US'
-    recognition.onresult = (e: SpeechRecognitionEvent) => {
+    recognition.onresult = (e: { results: { [key: number]: { [key: number]: { transcript: string } } } }) => {
       setMessage(e.results[0][0].transcript)
     }
     recognition.start()

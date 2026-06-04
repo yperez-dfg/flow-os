@@ -46,3 +46,5 @@ next-env.d.ts
 
 # Claude launch config (local only)
 .claude/
+
+.vercel

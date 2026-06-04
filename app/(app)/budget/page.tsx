@@ -11,9 +11,9 @@ export default function BudgetPage() {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="px-4 pt-6 pb-4 space-y-4">
+    <div className="min-h-screen bg-[#F5F5F7] px-4 pt-6 pb-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Budget</h1>
+        <h1 className="font-display italic text-2xl font-normal text-[#1D1D1F]">Budget</h1>
         <button
           onClick={() => setOpen(true)}
           className="text-[#1560FF] active:scale-90 transition-transform"
