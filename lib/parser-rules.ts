@@ -3,12 +3,20 @@ import type { CalendarEvent } from '@/store/calendar'
 import type { Transaction } from '@/store/budget'
 import type { MealEntry } from '@/store/fitness'
 
+export interface RecurringExpenseItem {
+  name: string
+  amount: number
+  dueDay: number    // 1–28, defaults to 1
+  category: string
+}
+
 export type ParsedAction =
-  | { type: 'task';     data: Omit<PersonalTask, 'id' | 'createdAt'> }
-  | { type: 'reminder'; data: Omit<CalendarEvent, 'id'> }
-  | { type: 'goal';     data: { title: string; target: number; unit: string } }
-  | { type: 'meal';     data: Omit<MealEntry, 'id'> }
-  | { type: 'expense';  data: Omit<Transaction, 'id'> }
+  | { type: 'task';               data: Omit<PersonalTask, 'id' | 'createdAt'> }
+  | { type: 'reminder';           data: Omit<CalendarEvent, 'id'> }
+  | { type: 'goal';               data: { title: string; target: number; unit: string } }
+  | { type: 'meal';               data: Omit<MealEntry, 'id'> }
+  | { type: 'expense';            data: Omit<Transaction, 'id'> }
+  | { type: 'recurring_expense';  items: RecurringExpenseItem[] }
   | { type: 'unknown' }
 
 export interface ParserRule {
@@ -20,6 +28,9 @@ export interface ParserRule {
 
 // ─── Add your own rules here ─────────────────────────────────────
 export const PARSER_RULES: ParserRule[] = [
+  // Recurring expenses — must be checked FIRST (before generic expense rule)
+  { pattern: /re[oc]+urr?ing|add\s+re[oc]+urr?/i, action: 'recurring_expense' },
+
   // Tasks — CRM / business
   { pattern: /call|follow.?up|reach out|contact|phone/i,     action: 'task', priority: 'High' },
   { pattern: /send|email|proposal|quote/i,                   action: 'task', priority: 'Medium' },

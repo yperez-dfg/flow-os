@@ -1,4 +1,68 @@
-import { PARSER_RULES, type ParsedAction } from './parser-rules'
+import { PARSER_RULES, type ParsedAction, type RecurringExpenseItem } from './parser-rules'
+
+// ─── Recurring expense category guesser ──────────────────────────
+function guessCategory(name: string): string {
+  const n = name.toLowerCase()
+  if (/rent|mortgage|lease|hoa/i.test(n))                        return 'Rent'
+  if (/netflix|hulu|spotify|apple|amazon|icloud|youtube|disney|paramount|peacock|max|prime|subscription/i.test(n)) return 'Subscriptions'
+  if (/grocery|food|doordash|uber eats|grubhub/i.test(n))        return 'Food'
+  if (/gas|shell|chevron|arco|fuel|insurance|car|auto/i.test(n)) return 'Gas'
+  return 'Subscriptions' // most recurring expenses are subscriptions
+}
+
+// ─── Extract due day from a single item string ────────────────────
+// Supports: "due 1st", "due 15", "1st", "15th", "on the 15" → number
+// Returns 1 if not found (first of month default)
+function extractDueDay(text: string): number {
+  const match = text.match(/(?:due\s+(?:on\s+(?:the\s+)?)?|on\s+the\s+)(\d{1,2})(?:st|nd|rd|th)?/i)
+    ?? text.match(/\b(\d{1,2})(?:st|nd|rd|th)\b/i)
+  if (!match) return 1
+  const day = parseInt(match[1])
+  return day >= 1 && day <= 28 ? day : 1
+}
+
+// ─── Parse a single "Name $amount [due day]" item ────────────────
+function parseOneRecurringItem(raw: string): RecurringExpenseItem | null {
+  const text = raw.trim()
+  if (!text) return null
+
+  // Extract amount — must have a number somewhere
+  const amountMatch = text.match(/\$?(\d+(?:\.\d{1,2})?)/)
+  if (!amountMatch) return null
+  const amount = parseFloat(amountMatch[1])
+  if (!amount) return null
+
+  const dueDay = extractDueDay(text)
+
+  // Name = everything before the dollar sign / amount, minus "due X" suffix
+  const name = text
+    .replace(/\$?\d+(?:\.\d{1,2})?/g, '')         // remove amount
+    .replace(/(?:due\s+(?:on\s+(?:the\s+)?)?|on\s+the\s+)\d{1,2}(?:st|nd|rd|th)?/gi, '') // remove due date
+    .replace(/\b\d{1,2}(?:st|nd|rd|th)\b/gi, '')  // remove standalone ordinals
+    .replace(/[,:.]/g, '')
+    .trim()
+    .replace(/^./, c => c.toUpperCase())
+
+  if (!name) return null
+
+  return { name, amount, dueDay, category: guessCategory(name) }
+}
+
+// ─── Parse bulk recurring expenses from a full message ────────────
+// Strip the trigger phrase, then split the rest by commas/newlines
+export function parseRecurringExpenses(text: string): RecurringExpenseItem[] {
+  const stripped = text
+    .replace(/^(?:add\s+)?re[oc]+urr?(?:ing)?\s*(?:expense[s]?|bill[s]?|purchase[s]?)?\s*[:,-]?\s*/i, '')
+    .trim()
+
+  // Split by comma or newline
+  const parts = stripped.split(/,|\n/).map(s => s.trim()).filter(Boolean)
+
+  return parts.flatMap(part => {
+    const item = parseOneRecurringItem(part)
+    return item ? [item] : []
+  })
+}
 
 function extractTime(text: string): string | undefined {
   const match = text.match(/at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i)
@@ -108,6 +172,11 @@ export function parseMessage(text: string): ParsedAction {
               date,
             },
           }
+        case 'recurring_expense': {
+          const items = parseRecurringExpenses(trimmed)
+          if (items.length === 0) return { type: 'unknown' }
+          return { type: 'recurring_expense', items }
+        }
       }
     }
   }

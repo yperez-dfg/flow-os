@@ -27,7 +27,7 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
 
   const { addTask, addGoal } = usePlannerStore()
   const { addEvent } = useCalendarStore()
-  const { addTransaction } = useBudgetStore()
+  const { addTransaction, addRecurringExpense, categories } = useBudgetStore()
   const { addMeal } = useFitnessStore()
 
   // Accept external value from quick-action chips
@@ -79,6 +79,37 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
         addTransaction(result.data)
         showToast(`✓ Expense added: $${result.data.amount}`)
         break
+      case 'recurring_expense': {
+        const { items } = result
+        items.forEach(item => {
+          const cat = categories.find(c => c.name === item.category)
+          addRecurringExpense({
+            name: item.name,
+            amount: item.amount,
+            category: item.category,
+            dueDay: item.dueDay,
+            color: cat?.color ?? '#1560FF',
+            active: true,
+          })
+          // Auto-add due date to calendar
+          const today = new Date()
+          const dueDate = new Date(today.getFullYear(), today.getMonth(), item.dueDay)
+          if (dueDate <= today) dueDate.setMonth(dueDate.getMonth() + 1)
+          addEvent({
+            title: `💳 ${item.name} — $${item.amount}`,
+            date: dueDate.toISOString().split('T')[0],
+            color: cat?.color ?? '#1560FF',
+            repeat: 'monthly',
+            notify: true,
+            notifyMinutesBefore: 1440,
+            type: 'personal',
+            notes: `Recurring: $${item.amount}/mo`,
+          })
+        })
+        const names = items.map(i => i.name).join(', ')
+        showToast(`✓ ${items.length} recurring bill${items.length > 1 ? 's' : ''} added: ${names}`)
+        break
+      }
       default:
         showToast('Try: "remind me to call Carlos at 3pm"', 'error')
         return
