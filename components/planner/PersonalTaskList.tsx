@@ -22,7 +22,7 @@ export default function PersonalTaskList() {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a]">
+        <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73]">
           Personal Tasks
         </p>
         <button
@@ -42,19 +42,19 @@ export default function PersonalTaskList() {
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }}
-              className="glass p-3 flex items-center gap-3"
+              className="apple-card p-3 flex items-center gap-3"
             >
               <button
                 onClick={() => toggleTask(t.id)}
                 className={`w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors flex items-center justify-center
-                  ${t.done ? 'bg-[#00d084] border-[#00d084]' : 'border-white/20'}`}
+                  ${t.done ? 'bg-[#00d084] border-[#00d084]' : 'border-[#C7C7CC]'}`}
                 aria-label={t.done ? 'Mark incomplete' : 'Mark complete'}
               >
                 {t.done && <span className="text-white text-[10px] font-bold">✓</span>}
               </button>
               <p
                 className={`flex-1 text-sm ${
-                  t.done ? 'line-through text-[#8a8f9a]' : 'text-[#edeef2]'
+                  t.done ? 'line-through text-[#6E6E73]' : 'text-[#1D1D1F]'
                 }`}
               >
                 {t.title}
@@ -71,7 +71,7 @@ export default function PersonalTaskList() {
               />
               <button
                 onClick={() => deleteTask(t.id)}
-                className="text-[#8a8f9a] active:text-[#ff4d6a] transition-colors"
+                className="text-[#6E6E73] active:text-[#ff4d6a] transition-colors"
                 aria-label="Delete task"
               >
                 <Trash2 size={14} />
@@ -80,7 +80,7 @@ export default function PersonalTaskList() {
           ))}
         </AnimatePresence>
         {personalTasks.length === 0 && (
-          <p className="text-[#8a8f9a] text-sm text-center py-6">
+          <p className="text-[#6E6E73] text-sm text-center py-6">
             No personal tasks — tap + to add one
           </p>
         )}
@@ -89,8 +89,8 @@ export default function PersonalTaskList() {
       <BottomSheet open={open} onClose={() => setOpen(false)} title="Add Task">
         <div className="space-y-4">
           <input
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3
-                       text-[#edeef2] placeholder-[#8a8f9a] outline-none focus:border-[#1560FF]/50"
+            className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
+                       text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50"
             placeholder="Task title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -106,7 +106,7 @@ export default function PersonalTaskList() {
                   ${
                     priority === p
                       ? 'bg-[#1560FF] border-[#1560FF] text-white'
-                      : 'border-white/[0.08] text-[#8a8f9a]'
+                      : 'border-[#E5E5EA] text-[#6E6E73]'
                   }`}
               >
                 {p}

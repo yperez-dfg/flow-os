@@ -37,9 +37,9 @@ export default function SettingsForm() {
   return (
     <div className="space-y-4">
       {/* Profile */}
-      <GlassCard className="p-0 divide-y divide-white/[0.06]">
+      <GlassCard className="p-0 divide-y divide-[#E5E5EA]">
         <div className="px-4 pt-4 pb-2">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a]">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73]">
             Profile
           </p>
         </div>
@@ -70,9 +70,9 @@ export default function SettingsForm() {
       </GlassCard>
 
       {/* Automation */}
-      <GlassCard className="p-0 divide-y divide-white/[0.06]">
+      <GlassCard className="p-0 divide-y divide-[#E5E5EA]">
         <div className="px-4 pt-4 pb-2">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a]">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73]">
             Automation
           </p>
         </div>
@@ -97,9 +97,9 @@ export default function SettingsForm() {
       </GlassCard>
 
       {/* Health & Budget */}
-      <GlassCard className="p-0 divide-y divide-white/[0.06]">
+      <GlassCard className="p-0 divide-y divide-[#E5E5EA]">
         <div className="px-4 pt-4 pb-2">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a]">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73]">
             Health & Budget
           </p>
         </div>
@@ -125,21 +125,21 @@ export default function SettingsForm() {
 
       {/* DFG CRM */}
       <GlassCard className="p-4">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a] mb-3">
+        <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-3">
           DFG CRM Connection
         </p>
-        <p className="text-xs text-[#8a8f9a] mb-4">
+        <p className="text-xs text-[#6E6E73] mb-4">
           Connected to Supabase · cmntmktwcrkqryuaocui
         </p>
         <button
           onClick={testCRM}
           disabled={crmStatus === 'loading'}
-          className="w-full py-3 rounded-xl border border-white/[0.08] text-sm font-semibold
-                     text-[#edeef2] active:scale-95 transition-transform flex items-center
+          className="w-full py-3 rounded-xl border border-[#E5E5EA] text-sm font-semibold
+                     text-[#1D1D1F] active:scale-95 transition-transform flex items-center
                      justify-center gap-2 disabled:opacity-60"
         >
           {crmStatus === 'loading' && (
-            <Loader2 size={16} className="animate-spin text-[#8a8f9a]" />
+            <Loader2 size={16} className="animate-spin text-[#6E6E73]" />
           )}
           {crmStatus === 'ok' && (
             <CheckCircle size={16} className="text-[#00d084]" />
@@ -156,8 +156,8 @@ export default function SettingsForm() {
 
       {/* App info */}
       <div className="text-center pt-2">
-        <p className="text-[10px] font-mono text-[#8a8f9a]">FlowOS · Phase 1</p>
-        <p className="text-[10px] text-[#8a8f9a]/50 mt-0.5">Digital Flow Global</p>
+        <p className="text-[10px] font-mono text-[#6E6E73]">FlowOS · Phase 1</p>
+        <p className="text-[10px] text-[#6E6E73]/50 mt-0.5">Digital Flow Global</p>
       </div>
     </div>
   )
@@ -174,7 +174,7 @@ function SettingRow({
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-sm text-[#edeef2]">{label}</p>
+      <p className="text-sm text-[#1D1D1F]">{label}</p>
       {children}
     </div>
   )
@@ -191,7 +191,7 @@ function Toggle({
     <button
       onClick={() => onChange(!value)}
       className={`w-10 h-6 rounded-full transition-colors relative flex-shrink-0
-        ${value ? 'bg-[#1560FF]' : 'bg-white/[0.12]'}`}
+        ${value ? 'bg-[#1560FF]' : 'bg-[#E5E5EA]'}`}
       aria-label={value ? 'Enabled' : 'Disabled'}
     >
       <div

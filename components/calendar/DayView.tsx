@@ -11,27 +11,27 @@ export default function DayView() {
   return (
     <div className="space-y-2 mt-4">
       {dayEvents.length === 0 && (
-        <p className="text-[#8a8f9a] text-sm text-center py-8">
+        <p className="text-[#6E6E73] text-sm text-center py-8">
           No events on this day
         </p>
       )}
       {dayEvents.map((e) => (
         <div
           key={e.id}
-          className="glass p-3 flex items-start gap-3"
+          className="apple-card p-3 flex items-start gap-3"
           style={{ borderLeft: `3px solid ${e.color}` }}
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-0.5">
-              <p className="text-sm font-medium text-[#edeef2]">{e.title}</p>
+              <p className="text-sm font-medium text-[#1D1D1F]">{e.title}</p>
               {e.type === 'crm_meeting' && <Badge label="DFG" color="blue" />}
             </div>
             {e.notes && (
-              <p className="text-[11px] text-[#8a8f9a]">{e.notes}</p>
+              <p className="text-[11px] text-[#6E6E73]">{e.notes}</p>
             )}
           </div>
           {e.time && (
-            <p className="font-mono text-xs text-[#8a8f9a] whitespace-nowrap flex-shrink-0">
+            <p className="font-mono text-xs text-[#6E6E73] whitespace-nowrap flex-shrink-0">
               {e.time}
             </p>
           )}

@@ -24,7 +24,7 @@ export default function MonthView() {
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
           <div
             key={i}
-            className="text-center text-[10px] font-mono text-[#8a8f9a] py-1"
+            className="text-center text-[10px] font-mono text-[#6E6E73] py-1"
           >
             {d}
           </div>
@@ -47,7 +47,7 @@ export default function MonthView() {
                     ? 'bg-[#1560FF] text-white'
                     : isToday
                     ? 'bg-[#1560FF]/20 text-[#1560FF]'
-                    : 'text-[#edeef2] active:bg-white/[0.06]'
+                    : 'text-[#1D1D1F] active:bg-[#E5E5EA]'
                 }`}
             >
               {day}

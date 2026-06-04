@@ -19,7 +19,7 @@ export default function GymChecklist({ day, exercises }: GymChecklistProps) {
             ${
               ex.done
                 ? 'bg-[#00d084]/10 border-[#00d084]/20'
-                : 'bg-white/[0.02] border-white/[0.06]'
+                : 'bg-[#F9F9F9] border-[#E5E5EA]'
             }`}
         >
           <div
@@ -33,12 +33,12 @@ export default function GymChecklist({ day, exercises }: GymChecklistProps) {
           <div className="flex-1">
             <p
               className={`text-sm font-medium ${
-                ex.done ? 'line-through text-[#8a8f9a]' : 'text-[#edeef2]'
+                ex.done ? 'line-through text-[#6E6E73]' : 'text-[#1D1D1F]'
               }`}
             >
               {ex.name}
             </p>
-            <p className="font-mono text-[10px] text-[#8a8f9a]">
+            <p className="font-mono text-[10px] text-[#6E6E73]">
               {ex.sets}×{ex.reps}
               {ex.weight > 0 ? ` @ ${ex.weight}lbs` : ''}
             </p>

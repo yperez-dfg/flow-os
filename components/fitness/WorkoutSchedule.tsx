@@ -14,8 +14,8 @@ export default function WorkoutSchedule() {
   const selectedDay = workoutSchedule.find((d) => d.day === selected)
 
   return (
-    <div className="glass p-4">
-      <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a] mb-3">
+    <div className="apple-card p-4">
+      <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-3">
         Workout Schedule
       </p>
       <div className="flex gap-1 mb-4 overflow-x-auto pb-1">
@@ -27,7 +27,7 @@ export default function WorkoutSchedule() {
               ${
                 selected === d.day
                   ? 'bg-[#1560FF] text-white'
-                  : 'bg-white/[0.04] text-[#8a8f9a]'
+                  : 'bg-[#F5F5F7] text-[#6E6E73]'
               }`}
           >
             <span className="text-xs font-semibold">{d.day}</span>
@@ -39,13 +39,13 @@ export default function WorkoutSchedule() {
       </div>
       {selectedDay && (
         <div>
-          <p className="text-sm font-semibold text-[#edeef2] mb-3">
+          <p className="text-sm font-semibold text-[#1D1D1F] mb-3">
             {selectedDay.type}
           </p>
           {selectedDay.exercises.length > 0 ? (
             <GymChecklist day={selectedDay.day} exercises={selectedDay.exercises} />
           ) : (
-            <p className="text-[#8a8f9a] text-sm text-center py-4">
+            <p className="text-[#6E6E73] text-sm text-center py-4">
               Rest day — recover and recharge 💪
             </p>
           )}

@@ -6,9 +6,9 @@ export default function WeeklyGoals() {
 
   if (weeklyGoals.length === 0) {
     return (
-      <div className="glass p-4 text-center">
-        <p className="text-[#8a8f9a] text-sm">No weekly goals set</p>
-        <p className="text-[10px] text-[#8a8f9a] mt-1">Add goals in Settings</p>
+      <div className="apple-card p-4 text-center">
+        <p className="text-[#6E6E73] text-sm">No weekly goals set</p>
+        <p className="text-[10px] text-[#6E6E73] mt-1">Add goals in Settings</p>
       </div>
     )
   }
@@ -19,16 +19,16 @@ export default function WeeklyGoals() {
         const pct = Math.min((g.current / g.target) * 100, 100)
         const done = g.current >= g.target
         return (
-          <div key={g.id} className="glass p-4">
+          <div key={g.id} className="apple-card p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-[#edeef2]">{g.title}</p>
+              <p className="text-sm font-medium text-[#1D1D1F]">{g.title}</p>
               <span
-                className={`font-mono text-xs ${done ? 'text-[#00d084]' : 'text-[#8a8f9a]'}`}
+                className={`font-mono text-xs ${done ? 'text-[#00d084]' : 'text-[#6E6E73]'}`}
               >
                 {g.current}/{g.target} {g.unit}
               </span>
             </div>
-            <div className="w-full bg-white/[0.06] rounded-full h-1.5">
+            <div className="w-full bg-[#E5E5EA] rounded-full h-1.5">
               <div
                 className="h-1.5 rounded-full transition-all duration-500"
                 style={{

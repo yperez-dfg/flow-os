@@ -29,26 +29,26 @@ export default function WeightChart() {
   }
 
   return (
-    <div className="glass p-4">
+    <div className="apple-card p-4">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a]">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73]">
             Weight
           </p>
           {current !== null && (
-            <p className="font-display text-2xl font-bold text-[#edeef2]">
+            <p className="font-display text-2xl font-bold text-[#1D1D1F]">
               {current}{' '}
-              <span className="text-sm text-[#8a8f9a] font-normal">lbs</span>
+              <span className="text-sm text-[#6E6E73] font-normal">lbs</span>
             </p>
           )}
-          <p className="text-[10px] text-[#8a8f9a]">Goal: {goalWeight} lbs</p>
+          <p className="text-[10px] text-[#6E6E73]">Goal: {goalWeight} lbs</p>
         </div>
         <div className="flex gap-2 items-center">
           <input
             type="number"
             inputMode="decimal"
-            className="w-20 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-1.5
-                       text-sm text-[#edeef2] outline-none font-mono text-center
+            className="w-20 bg-[#F5F5F7] border border-[#E5E5EA] rounded-lg px-2 py-1.5
+                       text-sm text-[#1D1D1F] outline-none font-mono text-center
                        focus:border-[#00d084]/50"
             placeholder="lbs"
             value={input}
@@ -71,12 +71,13 @@ export default function WeightChart() {
             <YAxis domain={['auto', 'auto']} hide />
             <Tooltip
               contentStyle={{
-                background: '#0A0C18',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: '#FFFFFF',
+                border: '1px solid #E5E5EA',
                 borderRadius: 8,
                 fontSize: 12,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               }}
-              labelStyle={{ color: '#8a8f9a', fontSize: 10 }}
+              labelStyle={{ color: '#6E6E73', fontSize: 10 }}
               itemStyle={{ color: '#00d084' }}
             />
             <Line
@@ -91,7 +92,7 @@ export default function WeightChart() {
         </ResponsiveContainer>
       )}
       {data.length <= 1 && (
-        <p className="text-[#8a8f9a] text-xs text-center py-4">
+        <p className="text-[#6E6E73] text-xs text-center py-4">
           Log 2+ weigh-ins to see your chart
         </p>
       )}

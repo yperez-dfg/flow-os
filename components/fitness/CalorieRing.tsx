@@ -32,7 +32,7 @@ export default function CalorieRing() {
   }
 
   return (
-    <div className="glass p-4">
+    <div className="apple-card p-4">
       <div className="flex items-center gap-6 mb-4">
         <RingProgress
           value={pct}
@@ -42,11 +42,11 @@ export default function CalorieRing() {
           label={`${remaining}\nleft`}
         />
         <div>
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a]">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73]">
             Calories
           </p>
-          <p className="font-display text-3xl font-bold text-[#edeef2]">{consumed}</p>
-          <p className="text-xs text-[#8a8f9a]">of {calorieGoal} goal</p>
+          <p className="font-display text-3xl font-bold text-[#1D1D1F]">{consumed}</p>
+          <p className="text-xs text-[#6E6E73]">of {calorieGoal} goal</p>
           <button
             onClick={() => setOpen(true)}
             className="mt-2 flex items-center gap-1 text-[#1560FF] text-xs font-semibold active:scale-95 transition-transform"
@@ -58,13 +58,13 @@ export default function CalorieRing() {
       <div className="space-y-1.5 max-h-40 overflow-y-auto">
         {mealLog.map((m) => (
           <div key={m.id} className="flex items-center gap-2 text-sm">
-            <span className="flex-1 text-[#edeef2] truncate">{m.name}</span>
-            <span className="font-mono text-xs text-[#8a8f9a] whitespace-nowrap">
+            <span className="flex-1 text-[#1D1D1F] truncate">{m.name}</span>
+            <span className="font-mono text-xs text-[#6E6E73] whitespace-nowrap">
               {m.calories} kcal
             </span>
             <button
               onClick={() => deleteMeal(m.id)}
-              className="text-[#8a8f9a] active:text-[#ff4d6a] transition-colors flex-shrink-0"
+              className="text-[#6E6E73] active:text-[#ff4d6a] transition-colors flex-shrink-0"
               aria-label="Delete meal"
             >
               <Trash2 size={12} />
@@ -72,7 +72,7 @@ export default function CalorieRing() {
           </div>
         ))}
         {mealLog.length === 0 && (
-          <p className="text-[#8a8f9a] text-xs text-center py-2">
+          <p className="text-[#6E6E73] text-xs text-center py-2">
             No meals logged today
           </p>
         )}
@@ -80,8 +80,8 @@ export default function CalorieRing() {
       <BottomSheet open={open} onClose={() => setOpen(false)} title="Log Meal">
         <div className="space-y-4">
           <input
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3
-                       text-[#edeef2] placeholder-[#8a8f9a] outline-none focus:border-[#1560FF]/50"
+            className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
+                       text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50"
             placeholder="Meal name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -90,8 +90,8 @@ export default function CalorieRing() {
           <input
             type="number"
             inputMode="numeric"
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3
-                       text-[#edeef2] placeholder-[#8a8f9a] outline-none focus:border-[#1560FF]/50 font-mono"
+            className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
+                       text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50 font-mono"
             placeholder="Calories"
             value={cals}
             onChange={(e) => setCals(e.target.value)}

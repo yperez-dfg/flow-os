@@ -46,7 +46,7 @@ export default function RingProgress({
       </svg>
       {label && (
         <div className="absolute text-center">
-          <span className="font-mono text-xs text-[#8a8f9a] whitespace-pre-line">{label}</span>
+          <span className="font-mono text-xs text-[#6E6E73] whitespace-pre-line">{label}</span>
         </div>
       )}
     </div>

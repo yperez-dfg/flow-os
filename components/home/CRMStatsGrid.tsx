@@ -26,7 +26,7 @@ export default function CRMStatsGrid() {
     return (
       <div className="grid grid-cols-2 gap-3">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="glass p-4 h-20 animate-pulse bg-white/[0.02]" />
+          <div key={i} className="apple-card p-4 h-20 animate-pulse bg-[#F9F9F9]" />
         ))}
       </div>
     )
@@ -34,8 +34,8 @@ export default function CRMStatsGrid() {
 
   if (!stats) {
     return (
-      <div className="glass p-4 text-center">
-        <p className="text-[#8a8f9a] text-sm">Unable to load CRM data</p>
+      <div className="apple-card p-4 text-center">
+        <p className="text-[#6E6E73] text-sm">Unable to load CRM data</p>
       </div>
     )
   }
@@ -58,10 +58,13 @@ export default function CRMStatsGrid() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.07, type: 'spring', stiffness: 300, damping: 28 }}
-          className="glass p-4"
-          style={{ boxShadow: `0 0 20px ${p.color}18, inset 0 0 20px ${p.color}06` }}
+          className="apple-card p-4"
+          style={{
+            boxShadow: `0 2px 16px ${p.color}15`,
+            borderLeft: `3px solid ${p.color}`,
+          }}
         >
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a] mb-1">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-1">
             {p.label}
           </p>
           <p className="font-display text-2xl font-bold" style={{ color: p.color }}>

@@ -34,8 +34,8 @@ export default function AddTransactionSheet({ open, onClose }: AddTransactionShe
         <input
           type="number"
           inputMode="decimal"
-          className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3
-                     text-[#edeef2] placeholder-[#8a8f9a] outline-none focus:border-[#1560FF]/50
+          className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
+                     text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50
                      font-mono text-2xl text-center"
           placeholder="0.00"
           value={amount}
@@ -51,7 +51,7 @@ export default function AddTransactionSheet({ open, onClose }: AddTransactionShe
                 ${
                   category === c.name
                     ? 'text-white border-transparent'
-                    : 'border-white/[0.08] text-[#8a8f9a]'
+                    : 'border-[#E5E5EA] text-[#6E6E73]'
                 }`}
               style={category === c.name ? { background: c.color } : {}}
             >
@@ -60,8 +60,8 @@ export default function AddTransactionSheet({ open, onClose }: AddTransactionShe
           ))}
         </div>
         <input
-          className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3
-                     text-[#edeef2] placeholder-[#8a8f9a] outline-none focus:border-[#1560FF]/50"
+          className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
+                     text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50"
           placeholder="Note (optional)"
           value={note}
           onChange={(e) => setNote(e.target.value)}

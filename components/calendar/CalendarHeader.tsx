@@ -33,7 +33,7 @@ export default function CalendarHeader() {
             key={v}
             onClick={() => setView(v)}
             className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors
-              ${view === v ? 'bg-[#1560FF] text-white' : 'text-[#8a8f9a]'}`}
+              ${view === v ? 'bg-[#1560FF] text-white' : 'text-[#6E6E73]'}`}
           >
             {v.charAt(0).toUpperCase() + v.slice(1)}
           </button>
@@ -42,16 +42,16 @@ export default function CalendarHeader() {
       <div className="flex items-center gap-1">
         <button
           onClick={() => navigate(-1)}
-          className="text-[#8a8f9a] active:text-white p-1 transition-colors"
+          className="text-[#6E6E73] active:text-white p-1 transition-colors"
         >
           <ChevronLeft size={18} />
         </button>
-        <p className="font-mono text-xs text-[#edeef2] min-w-[110px] text-center">
+        <p className="font-mono text-xs text-[#1D1D1F] min-w-[110px] text-center">
           {label}
         </p>
         <button
           onClick={() => navigate(1)}
-          className="text-[#8a8f9a] active:text-white p-1 transition-colors"
+          className="text-[#6E6E73] active:text-white p-1 transition-colors"
         >
           <ChevronRight size={18} />
         </button>

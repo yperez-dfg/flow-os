@@ -25,8 +25,8 @@ export default function SpendingChart() {
   if (data.length === 0) return null
 
   return (
-    <div className="glass p-4">
-      <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a] mb-4">
+    <div className="apple-card p-4">
+      <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-4">
         Spending by Category
       </p>
       <ResponsiveContainer width="100%" height={data.length * 44}>
@@ -36,11 +36,11 @@ export default function SpendingChart() {
             type="category"
             dataKey="name"
             width={90}
-            tick={{ fill: '#8a8f9a', fontSize: 11, fontFamily: 'Space Grotesk' }}
+            tick={{ fill: '#6E6E73', fontSize: 11, fontFamily: 'Inter' }}
             axisLine={false}
             tickLine={false}
           />
-          <Bar dataKey="cap" fill="rgba(255,255,255,0.06)" radius={4} isAnimationActive={false} />
+          <Bar dataKey="cap" fill="rgba(0,0,0,0.06)" radius={4} isAnimationActive={false} />
           <Bar dataKey="spent" radius={4}>
             {data.map((d, i) => (
               <Cell
@@ -52,11 +52,7 @@ export default function SpendingChart() {
               dataKey="spent"
               position="right"
               formatter={(v: unknown) => `$${v as number}`}
-              style={{
-                fill: '#8a8f9a',
-                fontSize: 10,
-                fontFamily: 'JetBrains Mono',
-              }}
+              style={{ fill: '#6E6E73', fontSize: 10, fontFamily: 'ui-monospace' }}
             />
           </Bar>
         </BarChart>

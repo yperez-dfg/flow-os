@@ -18,16 +18,16 @@ export default function DailyOverviewCard() {
 
   return (
     <GlassCard glow="#1560FF" className="p-5">
-      <p className="text-[10px] font-mono uppercase tracking-widest text-[#8a8f9a] mb-3">
+      <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-3">
         Today at a Glance
       </p>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-[10px] text-[#8a8f9a] mb-0.5">Tasks Remaining</p>
-          <p className="font-display text-xl font-bold text-[#edeef2]">{tasksDue}</p>
+          <p className="text-[10px] text-[#6E6E73] mb-0.5">Tasks Remaining</p>
+          <p className="font-display text-xl font-bold text-[#1D1D1F]">{tasksDue}</p>
         </div>
         <div>
-          <p className="text-[10px] text-[#8a8f9a] mb-0.5">Calories Left</p>
+          <p className="text-[10px] text-[#6E6E73] mb-0.5">Calories Left</p>
           <p
             className="font-display text-xl font-bold"
             style={{ color: calsLeft < 200 ? '#ff4d6a' : '#00d084' }}
@@ -36,17 +36,17 @@ export default function DailyOverviewCard() {
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-[#8a8f9a] mb-0.5">Budget Left</p>
+          <p className="text-[10px] text-[#6E6E73] mb-0.5">Budget Left</p>
           <p
             className="font-display text-xl font-bold"
-            style={{ color: budgetLeft < 0 ? '#ff4d6a' : '#edeef2' }}
+            style={{ color: budgetLeft < 0 ? '#ff4d6a' : '#1D1D1F' }}
           >
             ${budgetLeft.toLocaleString()}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-[#8a8f9a] mb-0.5">Date</p>
-          <p className="font-mono text-sm text-[#edeef2]">
+          <p className="text-[10px] text-[#6E6E73] mb-0.5">Date</p>
+          <p className="font-mono text-sm text-[#1D1D1F]">
             {new Date().toLocaleDateString('en-US', {
               weekday: 'short',
               month: 'short',
