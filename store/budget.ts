@@ -17,18 +17,31 @@ export interface BudgetCategory {
   color: string
 }
 
+export interface RecurringExpense {
+  id: string
+  name: string
+  amount: number
+  category: string
+  dueDay: number     // 1–28 (day of month)
+  color: string
+  active: boolean
+}
+
 interface BudgetState {
   monthlyIncome: number
   categories: BudgetCategory[]
   transactions: Transaction[]
   month: string  // YYYY-MM
   history: { month: string; transactions: Transaction[] }[]
+  recurringExpenses: RecurringExpense[]
   setIncome: (n: number) => void
   addCategory: (c: Omit<BudgetCategory, 'id'>) => void
   addTransaction: (t: Omit<Transaction, 'id'>) => void
   deleteTransaction: (id: string) => void
   archiveMonth: () => void
   spentByCategory: () => Record<string, number>
+  addRecurringExpense: (e: Omit<RecurringExpense, 'id'>) => void
+  removeRecurringExpense: (id: string) => void
 }
 
 const DEFAULT_CATEGORIES: BudgetCategory[] = [
@@ -47,6 +60,7 @@ export const useBudgetStore = create<BudgetState>()(
       transactions: [],
       month: new Date().toISOString().slice(0, 7),
       history: [],
+      recurringExpenses: [],
       setIncome: (monthlyIncome) => set({ monthlyIncome }),
       addCategory: (c) =>
         set((s) => ({
@@ -68,6 +82,14 @@ export const useBudgetStore = create<BudgetState>()(
           ],
           transactions: [],
           month: new Date().toISOString().slice(0, 7),
+        })),
+      addRecurringExpense: (e) =>
+        set((s) => ({
+          recurringExpenses: [...s.recurringExpenses, { ...e, id: nanoid() }],
+        })),
+      removeRecurringExpense: (id) =>
+        set((s) => ({
+          recurringExpenses: s.recurringExpenses.filter(r => r.id !== id),
         })),
       spentByCategory: () => {
         const { transactions } = get()

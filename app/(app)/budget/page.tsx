@@ -4,6 +4,7 @@ import BalanceDisplay from '@/components/budget/BalanceDisplay'
 import SpendingChart from '@/components/budget/SpendingChart'
 import TransactionList from '@/components/budget/TransactionList'
 import AddTransactionSheet from '@/components/budget/AddTransactionSheet'
+import RecurringExpenses from '@/components/budget/RecurringExpenses'
 import { Plus } from 'lucide-react'
 
 export default function BudgetPage() {
@@ -22,6 +23,8 @@ export default function BudgetPage() {
         </button>
       </div>
       <BalanceDisplay />
+      <RecurringExpenses />
+      <div className="w-full h-px bg-[#E5E5EA]" />
       <SpendingChart />
       <TransactionList />
       <AddTransactionSheet open={open} onClose={() => setOpen(false)} />

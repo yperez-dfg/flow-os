@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useSettingsStore } from '@/store/settings'
 import { sb } from '@/lib/supabase'
 import GlassCard from '@/components/ui/GlassCard'
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { CheckCircle, XCircle, Loader2, Copy, Check } from 'lucide-react'
 
 type CRMStatus = 'idle' | 'loading' | 'ok' | 'error'
 
@@ -22,6 +22,17 @@ export default function SettingsForm() {
   } = useSettingsStore()
 
   const [crmStatus, setCrmStatus] = useState<CRMStatus>('idle')
+  const [copied, setCopied] = useState(false)
+
+  const feedUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/api/calendar/feed`
+    : 'https://daily-planner-pi-ten.vercel.app/api/calendar/feed'
+
+  const copyFeedUrl = () => {
+    navigator.clipboard.writeText(feedUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const testCRM = async () => {
     setCrmStatus('loading')
@@ -152,6 +163,32 @@ export default function SettingsForm() {
           {crmStatus === 'ok' && 'Connected ✓'}
           {crmStatus === 'error' && 'Connection failed'}
         </button>
+      </GlassCard>
+
+      {/* Calendar Sync */}
+      <GlassCard className="p-4">
+        <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-2">
+          Calendar Sync
+        </p>
+        <p className="text-xs text-[#6E6E73] mb-3">
+          Subscribe to your CRM meetings in Apple Calendar or Google Calendar. Paste this URL once — events auto-update.
+        </p>
+        <div className="flex items-center gap-2 bg-[#F5F5F7] rounded-xl p-3 mb-3">
+          <p className="flex-1 text-[10px] font-mono text-[#1D1D1F] truncate">{feedUrl}</p>
+          <button type="button" onClick={copyFeedUrl} className="text-[#1560FF] flex-shrink-0 active:scale-90 transition-transform">
+            {copied ? <Check size={14} className="text-[#00d084]" /> : <Copy size={14} />}
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="text-[10px] text-[#6E6E73]">
+            <p className="font-semibold text-[#1D1D1F] mb-1">📱 iPhone Apple Calendar</p>
+            Settings → Calendar → Accounts → Other → Add Subscribed Calendar
+          </div>
+          <div className="text-[10px] text-[#6E6E73]">
+            <p className="font-semibold text-[#1D1D1F] mb-1">💻 Google Calendar</p>
+            calendar.google.com → Other Calendars (+) → From URL
+          </div>
+        </div>
       </GlassCard>
 
       {/* App info */}
