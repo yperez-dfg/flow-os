@@ -17,7 +17,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-50
-                    bg-[#07080F]/80 backdrop-blur-xl border-t border-white/[0.08]
+                    bg-white/90 backdrop-blur-xl border-t border-[#E5E5EA]
                     safe-bottom">
       <div className="flex items-center justify-around px-2 pt-2 pb-1">
         {tabs.map(({ href, icon: Icon, label }) => {
@@ -31,18 +31,18 @@ export default function BottomNav() {
                 {active && (
                   <motion.div
                     layoutId="nav-pill"
-                    className="absolute inset-0 rounded-xl bg-[#1560FF]/15"
+                    className="absolute inset-0 rounded-xl bg-[#1560FF]/[0.08]"
                     transition={{ type: 'spring', stiffness: 400, damping: 35 }}
                   />
                 )}
                 <Icon
                   size={20}
-                  className={active ? 'text-[#1560FF]' : 'text-[#8a8f9a]'}
+                  className={active ? 'text-[#1560FF]' : 'text-[#AEAEB2]'}
                   strokeWidth={active ? 2.2 : 1.8}
                 />
               </motion.div>
               <span className={`text-[10px] font-medium tracking-wide
-                ${active ? 'text-[#1560FF]' : 'text-[#8a8f9a]'}`}>
+                ${active ? 'text-[#1560FF]' : 'text-[#AEAEB2]'}`}>
                 {label}
               </span>
             </Link>
@@ -59,17 +59,17 @@ export default function BottomNav() {
                 {settingsActive && (
                   <motion.div
                     layoutId="nav-pill"
-                    className="absolute inset-0 rounded-xl bg-[#1560FF]/15"
+                    className="absolute inset-0 rounded-xl bg-[#1560FF]/[0.08]"
                     transition={{ type: 'spring', stiffness: 400, damping: 35 }}
                   />
                 )}
                 <Settings
                   size={20}
-                  className={settingsActive ? 'text-[#1560FF]' : 'text-[#8a8f9a]'}
+                  className={settingsActive ? 'text-[#1560FF]' : 'text-[#AEAEB2]'}
                   strokeWidth={settingsActive ? 2.2 : 1.8}
                 />
               </motion.div>
-              <span className={`text-[10px] font-medium tracking-wide ${settingsActive ? 'text-[#1560FF]' : 'text-[#8a8f9a]'}`}>
+              <span className={`text-[10px] font-medium tracking-wide ${settingsActive ? 'text-[#1560FF]' : 'text-[#AEAEB2]'}`}>
                 Settings
               </span>
             </Link>
