@@ -47,4 +47,21 @@
 
   .font-display { font-family: var(--font-display); }
   .font-mono    { font-family: var(--font-mono); }
+
+  .settings-input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #edeef2;
+    outline: none;
+    text-align: right;
+    font-family: var(--font-mono);
+    width: 128px;
+  }
+
+  .settings-input:focus {
+    border-color: rgba(21,96,255,0.5);
+  }
 }
