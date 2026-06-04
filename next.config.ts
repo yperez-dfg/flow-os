@@ -9,6 +9,7 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  turbopack: {},
 }
 
 export default withSerwist(nextConfig)
