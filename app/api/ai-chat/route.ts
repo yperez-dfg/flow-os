@@ -61,8 +61,21 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(body),
     })
     const data = await res.json()
+
+    // Detect safety blocks or empty candidates
+    const finishReason = data.candidates?.[0]?.finishReason
+    if (data.promptFeedback?.blockReason || finishReason === 'SAFETY') {
+      return NextResponse.json({ type: 'unknown', message: "I can't help with that." })
+    }
+
     const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-    const clean = text.replace(/```json|```/g, '').trim()
+    if (!text.trim()) {
+      // Gemini returned empty — log full response for debugging
+      console.error('ai-chat: empty Gemini response', JSON.stringify(data))
+      return NextResponse.json({ type: 'unknown', message: 'No response from AI. Try rephrasing.' })
+    }
+
+    const clean = text.replace(/```json\n?|```/g, '').trim()
     return NextResponse.json(JSON.parse(clean))
   } catch (err) {
     console.error('ai-chat error:', err)

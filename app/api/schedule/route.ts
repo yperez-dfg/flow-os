@@ -43,7 +43,11 @@ export async function POST(req: NextRequest) {
     })
     const data = await res.json()
     const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-    const clean = text.replace(/```json|```/g, '').trim()
+    if (!text.trim()) {
+      console.error('schedule: empty Gemini response', JSON.stringify(data))
+      return NextResponse.json({ error: 'No response from AI' }, { status: 500 })
+    }
+    const clean = text.replace(/```json\n?|```/g, '').trim()
     const parsed = JSON.parse(clean)
     return NextResponse.json(parsed)
   } catch (err) {

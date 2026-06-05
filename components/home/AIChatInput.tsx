@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowUpIcon, Mic } from 'lucide-react'
+import { ArrowUpIcon, Mic, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePlannerStore } from '@/store/planner'
 import { useCalendarStore } from '@/store/calendar'
@@ -21,6 +21,7 @@ interface AIChatInputProps {
 
 export default function AIChatInput({ externalValue, onExternalValueConsumed }: AIChatInputProps) {
   const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
   const [toasts, setToasts] = useState<Toast[]>([])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -54,9 +55,10 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
   }
 
   const handleSubmit = async () => {
-    if (!message.trim()) return
+    if (!message.trim() || loading) return
     const text = message.trim()
     setMessage('')
+    setLoading(true)
     if (textareaRef.current) textareaRef.current.style.height = '48px'
 
     try {
@@ -130,6 +132,8 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
       }
     } catch {
       showToast('Something went wrong. Try again.', 'error')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -204,16 +208,18 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!message.trim()}
+            disabled={!message.trim() || loading}
             type="button"
             className={cn(
               'w-8 h-8 rounded-full flex items-center justify-center transition-all',
-              message.trim()
+              message.trim() && !loading
                 ? 'bg-[#1560FF] text-white shadow-sm active:scale-90'
                 : 'bg-[#F5F5F7] text-[#AEAEB2] cursor-not-allowed'
             )}
           >
-            <ArrowUpIcon size={14} />
+            {loading
+              ? <Loader2 size={14} className="animate-spin text-[#1560FF]" />
+              : <ArrowUpIcon size={14} />}
           </button>
         </div>
       </div>
