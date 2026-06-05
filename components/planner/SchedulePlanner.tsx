@@ -1,16 +1,16 @@
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Plus, X, ArrowRight, Check, RefreshCw } from 'lucide-react'
+import { Sparkles, Plus, X, Check, RefreshCw, CalendarDays, Pencil } from 'lucide-react'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { usePlannerStore } from '@/store/planner'
 import { useCalendarStore } from '@/store/calendar'
 import { scheduleLocalNotification } from '@/lib/notifications'
 
 interface ScheduleBlock {
-  time: string
+  time: string      // HH:MM
   title: string
-  duration: number
+  duration: number  // minutes
   notes?: string
   type: 'task' | 'break' | 'buffer'
 }
@@ -18,14 +18,9 @@ interface ScheduleBlock {
 type Step = 'collect' | 'generating' | 'review' | 'locked'
 
 const TYPE_COLOR: Record<ScheduleBlock['type'], string> = {
-  task: '#1560FF',
-  break: '#00d084',
+  task:   '#1560FF',
+  break:  '#00d084',
   buffer: '#C7C7CC',
-}
-
-function timeToMinutes(t: string) {
-  const [h, m] = t.split(':').map(Number)
-  return h * 60 + m
 }
 
 function minutesToTime(mins: number) {
@@ -34,11 +29,48 @@ function minutesToTime(mins: number) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-function fmt12(time24: string) {
-  const [h, m] = time24.split(':').map(Number)
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  const h12 = h % 12 || 12
-  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`
+function fmt12(t: string) {
+  const [h, m] = t.split(':').map(Number)
+  const ap = h >= 12 ? 'PM' : 'AM'
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ap}`
+}
+
+function toICSDate(d: Date) {
+  return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z/, 'Z')
+}
+
+function generateICS(blocks: ScheduleBlock[], date: string): string {
+  const events = blocks
+    .filter((b) => b.type !== 'buffer')
+    .map((b, i) => {
+      const start = new Date(`${date}T${b.time}:00`)
+      const end = new Date(start.getTime() + b.duration * 60000)
+      return [
+        'BEGIN:VEVENT',
+        `UID:flowos-${date}-${i}@flowos`,
+        `DTSTAMP:${toICSDate(new Date())}`,
+        `DTSTART:${toICSDate(start)}`,
+        `DTEND:${toICSDate(end)}`,
+        `SUMMARY:${b.title}`,
+        b.notes ? `DESCRIPTION:${b.notes}` : '',
+        'BEGIN:VALARM',
+        'TRIGGER:-PT10M',
+        'ACTION:DISPLAY',
+        `DESCRIPTION:${b.title} starts in 10 min`,
+        'END:VALARM',
+        'END:VEVENT',
+      ].filter(Boolean).join('\r\n')
+    })
+
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//FlowOS//Daily Schedule//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    ...events,
+    'END:VCALENDAR',
+  ].join('\r\n')
 }
 
 export default function SchedulePlanner() {
@@ -52,8 +84,9 @@ export default function SchedulePlanner() {
   const [adjustment, setAdjustment] = useState('')
   const [adjusting, setAdjusting] = useState(false)
   const [error, setError] = useState('')
+  const [icsUrl, setIcsUrl] = useState('')
 
-  const { personalTasks } = usePlannerStore()
+  const { personalTasks, addTask } = usePlannerStore()
   const { addEvent, selectedDate } = useCalendarStore()
 
   const todayTasks = personalTasks.filter((t) => !t.done)
@@ -67,6 +100,7 @@ export default function SchedulePlanner() {
     setAiMessage('')
     setAdjustment('')
     setError('')
+    setIcsUrl('')
     setOpen(true)
   }
 
@@ -83,11 +117,7 @@ export default function SchedulePlanner() {
 
   async function generate(adj?: string) {
     setError('')
-    if (adj) {
-      setAdjusting(true)
-    } else {
-      setStep('generating')
-    }
+    adj ? setAdjusting(true) : setStep('generating')
 
     const allTasks = [
       ...todayTasks.map((t) => `${t.title} [${t.priority}]`),
@@ -110,7 +140,7 @@ export default function SchedulePlanner() {
       setSchedule(data.schedule ?? [])
       setAiMessage(data.message ?? '')
       setStep('review')
-    } catch (e) {
+    } catch {
       setError('Could not generate schedule. Try again.')
       if (!adj) setStep('collect')
     } finally {
@@ -119,20 +149,31 @@ export default function SchedulePlanner() {
     }
   }
 
-  async function handleAdjust() {
-    if (!adjustment.trim()) return
-    await generate(adjustment.trim())
-  }
-
   function lockIn() {
     const now = new Date()
+
     schedule.forEach((block) => {
       if (block.type === 'buffer') return
+
+      // 1. Add to personal tasks
+      if (block.type === 'task') {
+        addTask({
+          title: block.title,
+          done: false,
+          priority: 'Medium',
+          repeat: 'none',
+          due: selectedDate,
+        })
+      }
+
+      // 2. Add to calendar
       addEvent({
         title: block.title,
         date: selectedDate,
         time: block.time,
-        endTime: minutesToTime(timeToMinutes(block.time) + block.duration),
+        endTime: minutesToTime(
+          block.time.split(':').reduce((h, m, i) => h + (i === 0 ? +m * 60 : +m), 0) + block.duration
+        ),
         notes: block.notes,
         color: TYPE_COLOR[block.type],
         repeat: 'none',
@@ -141,79 +182,57 @@ export default function SchedulePlanner() {
         type: 'personal',
       })
 
-      // Schedule local notification 10 min before
+      // 3. Schedule local notification 10 min before
       const [bh, bm] = block.time.split(':').map(Number)
-      const blockDate = new Date(selectedDate)
+      const blockDate = new Date(selectedDate + 'T00:00:00')
       blockDate.setHours(bh, bm - 10, 0, 0)
       const delay = blockDate.getTime() - now.getTime()
       if (delay > 0) {
-        scheduleLocalNotification(
-          `Coming up: ${block.title}`,
-          `Starts in 10 minutes`,
-          delay
-        )
+        scheduleLocalNotification(`Coming up: ${block.title}`, 'Starts in 10 minutes', delay)
       }
     })
+
+    // 4. Generate ICS for iOS native calendar
+    const ics = generateICS(schedule, selectedDate)
+    const blob = new Blob([ics], { type: 'text/calendar' })
+    const url = URL.createObjectURL(blob)
+    setIcsUrl(url)
     setStep('locked')
   }
+
+  const inputCls = `w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-4 py-4
+                    text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/60 text-base`
 
   return (
     <>
       <button
         onClick={handleOpen}
-        className="flex items-center gap-1.5 text-[11px] font-semibold text-[#1560FF] active:opacity-60 transition-opacity"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1560FF]/10 text-[#1560FF] text-xs font-semibold active:scale-90 transition-transform"
       >
-        <Sparkles size={13} />
+        <Sparkles size={12} />
         Plan My Day
       </button>
 
       <BottomSheet open={open} onClose={() => setOpen(false)} title="Day Planner">
         <AnimatePresence mode="wait">
 
-          {/* ── Step: collect ── */}
+          {/* ── collect ── */}
           {step === 'collect' && (
-            <motion.div
-              key="collect"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              className="space-y-5"
-            >
-              {/* Wake time */}
+            <motion.div key="collect" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
               <div>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-2">
-                  Wake / Start Time
-                </p>
-                <input
-                  type="time"
-                  value={wakeTime}
-                  onChange={(e) => setWakeTime(e.target.value)}
-                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
-                             text-[#1D1D1F] outline-none focus:border-[#1560FF]/50 text-sm"
-                />
+                <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-2">Wake / Start Time</p>
+                <input type="time" value={wakeTime} onChange={(e) => setWakeTime(e.target.value)} className={inputCls} />
               </div>
 
-              {/* Loaded tasks */}
               {todayTasks.length > 0 && (
                 <div>
                   <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-2">
-                    Tasks Loaded ({todayTasks.length})
+                    Your Tasks ({todayTasks.length} loaded)
                   </p>
                   <div className="space-y-1.5">
                     {todayTasks.map((t) => (
-                      <div
-                        key={t.id}
-                        className="flex items-center gap-2 bg-[#F5F5F7] rounded-xl px-3 py-2"
-                      >
-                        <div
-                          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                            t.priority === 'High'
-                              ? 'bg-[#ff4d6a]'
-                              : t.priority === 'Medium'
-                              ? 'bg-[#FF9F0A]'
-                              : 'bg-[#C7C7CC]'
-                          }`}
-                        />
+                      <div key={t.id} className="flex items-center gap-2.5 bg-[#F5F5F7] rounded-xl px-3 py-2.5">
+                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${t.priority === 'High' ? 'bg-[#ff4d6a]' : t.priority === 'Medium' ? 'bg-[#FF9F0A]' : 'bg-[#C7C7CC]'}`} />
                         <p className="text-sm text-[#1D1D1F]">{t.title}</p>
                       </div>
                     ))}
@@ -221,38 +240,28 @@ export default function SchedulePlanner() {
                 </div>
               )}
 
-              {/* Extra tasks */}
               <div>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-2">
-                  Anything Else Today?
-                </p>
+                <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-2">Add More</p>
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-3 py-2.5
-                               text-sm text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50"
-                    placeholder="e.g. Gym, groceries, call mom..."
+                    className="flex-1 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-4 py-4 text-base text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/60"
+                    placeholder="Gym, groceries, call mom…"
                     value={extraInput}
                     onChange={(e) => setExtraInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addExtra()}
+                    enterKeyHint="done"
+                    autoCapitalize="sentences"
                   />
-                  <button
-                    onClick={addExtra}
-                    className="w-10 h-10 rounded-xl bg-[#1560FF] text-white flex items-center justify-center active:scale-90 transition-transform"
-                  >
-                    <Plus size={16} />
+                  <button onClick={addExtra} className="w-12 h-[56px] rounded-2xl bg-[#1560FF] text-white flex items-center justify-center active:scale-90 transition-transform">
+                    <Plus size={18} />
                   </button>
                 </div>
                 {extras.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {extras.map((e, i) => (
-                      <span
-                        key={i}
-                        className="flex items-center gap-1 bg-[#1560FF]/10 text-[#1560FF] text-xs font-medium px-3 py-1 rounded-full"
-                      >
+                      <span key={i} className="flex items-center gap-1 bg-[#1560FF]/10 text-[#1560FF] text-xs font-medium px-3 py-1.5 rounded-full">
                         {e}
-                        <button onClick={() => removeExtra(i)} className="active:opacity-60">
-                          <X size={11} />
-                        </button>
+                        <button onClick={() => removeExtra(i)} className="active:opacity-60"><X size={11} /></button>
                       </span>
                     ))}
                   </div>
@@ -264,125 +273,101 @@ export default function SchedulePlanner() {
               <button
                 onClick={() => generate()}
                 disabled={todayTasks.length === 0 && extras.length === 0}
-                className="w-full bg-[#1560FF] text-white font-semibold py-3 rounded-xl
-                           active:scale-95 transition-transform disabled:opacity-40 flex items-center justify-center gap-2"
+                className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform disabled:opacity-40 flex items-center justify-center gap-2 text-base"
               >
-                <Sparkles size={15} />
-                Build My Schedule
+                <Sparkles size={16} /> Build My Schedule
               </button>
             </motion.div>
           )}
 
-          {/* ── Step: generating ── */}
+          {/* ── generating ── */}
           {step === 'generating' && (
-            <motion.div
-              key="generating"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center py-16 gap-4"
-            >
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
-              >
-                <Sparkles size={28} className="text-[#1560FF]" />
+            <motion.div key="generating" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-20 gap-4">
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}>
+                <Sparkles size={30} className="text-[#1560FF]" />
               </motion.div>
               <p className="text-sm text-[#6E6E73]">Building your schedule…</p>
             </motion.div>
           )}
 
-          {/* ── Step: review ── */}
+          {/* ── review ── */}
           {step === 'review' && (
-            <motion.div
-              key="review"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              className="space-y-4"
-            >
-              {aiMessage && (
-                <p className="text-xs text-[#6E6E73] italic">{aiMessage}</p>
-              )}
+            <motion.div key="review" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
+              {aiMessage && <p className="text-xs text-[#6E6E73] italic px-1">{aiMessage}</p>}
 
-              {/* Schedule blocks */}
+              {/* Schedule */}
               <div className="space-y-2">
                 {schedule.map((block, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 p-3 rounded-2xl bg-[#F5F5F7]"
-                    style={{ borderLeft: `3px solid ${TYPE_COLOR[block.type]}` }}
-                  >
+                  <div key={i} className="flex items-start gap-3 p-3.5 rounded-2xl bg-[#F5F5F7]" style={{ borderLeft: `3px solid ${TYPE_COLOR[block.type]}` }}>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[#1D1D1F]">{block.title}</p>
-                      {block.notes && (
-                        <p className="text-[11px] text-[#6E6E73] mt-0.5">{block.notes}</p>
-                      )}
+                      {block.notes && <p className="text-[11px] text-[#6E6E73] mt-0.5">{block.notes}</p>}
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="font-mono text-xs text-[#1D1D1F]">{fmt12(block.time)}</p>
+                      <p className="font-mono text-xs font-semibold text-[#1D1D1F]">{fmt12(block.time)}</p>
                       <p className="font-mono text-[10px] text-[#6E6E73]">{block.duration}m</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Adjustment input */}
+              {/* Adjust */}
               <div className="flex gap-2">
                 <input
-                  className="flex-1 bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-3 py-2.5
-                             text-sm text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50"
+                  className="flex-1 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-4 py-3.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/60"
                   placeholder="Move gym to 7am, add more breaks…"
                   value={adjustment}
                   onChange={(e) => setAdjustment(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAdjust()}
+                  onKeyDown={(e) => e.key === 'Enter' && adjustment.trim() && generate(adjustment.trim())}
                   disabled={adjusting}
+                  enterKeyHint="send"
                 />
                 <button
-                  onClick={handleAdjust}
+                  onClick={() => generate(adjustment.trim())}
                   disabled={!adjustment.trim() || adjusting}
-                  className="w-10 h-10 rounded-xl bg-[#F5F5F7] border border-[#E5E5EA] text-[#1560FF]
-                             flex items-center justify-center active:scale-90 transition-transform disabled:opacity-40"
+                  className="w-12 h-[52px] rounded-2xl bg-[#F5F5F7] border border-[#E5E5EA] text-[#1560FF] flex items-center justify-center active:scale-90 transition-transform disabled:opacity-40"
                 >
-                  {adjusting ? (
-                    <RefreshCw size={15} className="animate-spin" />
-                  ) : (
-                    <ArrowRight size={15} />
-                  )}
+                  {adjusting ? <RefreshCw size={15} className="animate-spin" /> : <Pencil size={15} />}
                 </button>
               </div>
 
+              {/* Approve */}
               <button
                 onClick={lockIn}
-                className="w-full bg-[#1D1D1F] text-white font-semibold py-3 rounded-xl
-                           active:scale-95 transition-transform flex items-center justify-center gap-2"
+                className="w-full bg-[#1D1D1F] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform flex items-center justify-center gap-2 text-base"
               >
-                <Check size={15} />
-                Lock It In
+                <Check size={16} /> Approve & Lock In
               </button>
             </motion.div>
           )}
 
-          {/* ── Step: locked ── */}
+          {/* ── locked ── */}
           {step === 'locked' && (
-            <motion.div
-              key="locked"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center justify-center py-12 gap-3 text-center"
-            >
-              <div className="w-14 h-14 rounded-full bg-[#00d084]/15 flex items-center justify-center">
-                <Check size={26} className="text-[#00d084]" />
+            <motion.div key="locked" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-10 gap-4 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#00d084]/15 flex items-center justify-center">
+                <Check size={28} className="text-[#00d084]" />
               </div>
-              <p className="font-semibold text-[#1D1D1F]">Schedule locked in</p>
-              <p className="text-xs text-[#6E6E73]">
-                {schedule.filter((b) => b.type !== 'buffer').length} events added to your calendar
-                with reminders
-              </p>
-              <button
-                onClick={() => setOpen(false)}
-                className="mt-2 text-[#1560FF] text-sm font-medium active:opacity-60"
-              >
+              <div>
+                <p className="font-semibold text-[#1D1D1F] text-lg">Schedule locked in!</p>
+                <p className="text-xs text-[#6E6E73] mt-1">
+                  {schedule.filter((b) => b.type === 'task').length} tasks · {schedule.filter((b) => b.type !== 'buffer').length} calendar events · reminders set
+                </p>
+              </div>
+
+              {/* iOS Calendar export */}
+              {icsUrl && (
+                <a
+                  href={icsUrl}
+                  download={`flowos-${selectedDate}.ics`}
+                  className="flex items-center gap-2 px-5 py-3 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-sm font-medium text-[#1D1D1F] active:scale-95 transition-transform"
+                >
+                  <CalendarDays size={16} className="text-[#1560FF]" />
+                  Add to iOS Calendar
+                </a>
+              )}
+              <p className="text-[10px] text-[#AEAEB2]">Tap above to import into Apple Calendar with alarms</p>
+
+              <button onClick={() => setOpen(false)} className="text-[#1560FF] text-sm font-medium active:opacity-60">
                 Done
               </button>
             </motion.div>

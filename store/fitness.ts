@@ -43,6 +43,9 @@ interface FitnessState {
   setGoalWeight: (w: number) => void
   addWeighIn: (weight: number) => void
   toggleExercise: (day: string, exName: string) => void
+  addExercise: (day: string, exercise: Omit<Exercise, 'done'>) => void
+  removeExercise: (day: string, exName: string) => void
+  setDayType: (day: string, type: string) => void
   addMeal: (m: Omit<MealEntry, 'id'>) => void
   deleteMeal: (id: string) => void
   markWorkoutDone: () => void
@@ -120,6 +123,26 @@ export const useFitnessStore = create<FitnessState>()(
                   ),
                 }
               : d
+          ),
+        })),
+      addExercise: (day, exercise) =>
+        set((s) => ({
+          workoutSchedule: s.workoutSchedule.map((d) =>
+            d.day === day ? { ...d, exercises: [...d.exercises, { ...exercise, done: false }] } : d
+          ),
+        })),
+      removeExercise: (day, exName) =>
+        set((s) => ({
+          workoutSchedule: s.workoutSchedule.map((d) =>
+            d.day === day
+              ? { ...d, exercises: d.exercises.filter((e) => e.name !== exName) }
+              : d
+          ),
+        })),
+      setDayType: (day, type) =>
+        set((s) => ({
+          workoutSchedule: s.workoutSchedule.map((d) =>
+            d.day === day ? { ...d, type } : d
           ),
         })),
       addMeal: (m) =>

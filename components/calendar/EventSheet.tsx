@@ -13,7 +13,9 @@ interface EventSheetProps {
 export default function EventSheet({ open, onClose }: EventSheetProps) {
   const { addEvent, selectedDate } = useCalendarStore()
   const [title, setTitle] = useState('')
+  const [date, setDate] = useState(selectedDate)
   const [time, setTime] = useState('')
+  const [endTime, setEndTime] = useState('')
   const [notes, setNotes] = useState('')
   const [color, setColor] = useState(COLORS[0])
   const [notify, setNotify] = useState(true)
@@ -22,8 +24,9 @@ export default function EventSheet({ open, onClose }: EventSheetProps) {
     if (!title.trim()) return
     addEvent({
       title: title.trim(),
-      date: selectedDate,
+      date: date || selectedDate,
       time: time || undefined,
+      endTime: endTime || undefined,
       notes: notes || undefined,
       color,
       repeat: 'none',
@@ -33,67 +36,95 @@ export default function EventSheet({ open, onClose }: EventSheetProps) {
     })
     setTitle('')
     setTime('')
+    setEndTime('')
     setNotes('')
     onClose()
   }
 
+  const inputCls = `w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-4 py-4
+                    text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/60
+                    text-base transition-colors`
+
   return (
     <BottomSheet open={open} onClose={onClose} title="Add Event">
-      <div className="space-y-4">
+      <div className="space-y-3">
         <input
-          className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
-                     text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50"
+          className={inputCls}
           placeholder="Event title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           autoFocus
+          autoCorrect="off"
+          autoCapitalize="sentences"
+          enterKeyHint="next"
         />
+
         <input
-          type="time"
-          className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
-                     text-[#1D1D1F] outline-none focus:border-[#1560FF]/50"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
+          type="date"
+          className={inputCls}
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
         />
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="text-[10px] text-[#6E6E73] font-mono uppercase tracking-wider mb-1.5 pl-1">Start</p>
+            <input
+              type="time"
+              className={inputCls}
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
+          </div>
+          <div>
+            <p className="text-[10px] text-[#6E6E73] font-mono uppercase tracking-wider mb-1.5 pl-1">End</p>
+            <input
+              type="time"
+              className={inputCls}
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          </div>
+        </div>
+
         <textarea
-          className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
-                     text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50 resize-none"
+          className={`${inputCls} resize-none`}
           placeholder="Notes (optional)"
           rows={2}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          enterKeyHint="done"
         />
+
         <div>
-          <p className="text-xs text-[#6E6E73] mb-2">Color</p>
-          <div className="flex gap-2">
+          <p className="text-[10px] text-[#6E6E73] font-mono uppercase tracking-wider mb-2 pl-1">Color</p>
+          <div className="flex gap-3">
             {COLORS.map((c) => (
               <button
                 key={c}
                 onClick={() => setColor(c)}
-                className={`w-8 h-8 rounded-full border-2 transition-all
-                  ${color === c ? 'border-white scale-110' : 'border-transparent'}`}
+                className={`w-9 h-9 rounded-full border-4 transition-all active:scale-90
+                  ${color === c ? 'border-white scale-110 shadow-md' : 'border-transparent'}`}
                 style={{ background: c }}
-                aria-label={`Select color ${c}`}
               />
             ))}
           </div>
         </div>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <div
-            onClick={() => setNotify(!notify)}
-            className={`w-10 h-6 rounded-full transition-colors relative
-              ${notify ? 'bg-[#1560FF]' : 'bg-[#E5E5EA]'}`}
-          >
-            <div
-              className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform
-                ${notify ? 'translate-x-5' : 'translate-x-1'}`}
-            />
-          </div>
+
+        <button
+          onClick={() => setNotify(!notify)}
+          className="w-full flex items-center justify-between py-3.5 px-4 bg-[#F5F5F7] rounded-2xl active:scale-[0.98] transition-transform"
+        >
           <span className="text-sm text-[#1D1D1F]">Remind me (15 min before)</span>
-        </label>
+          <div className={`w-11 h-6 rounded-full transition-colors relative ${notify ? 'bg-[#1560FF]' : 'bg-[#C7C7CC]'}`}>
+            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${notify ? 'translate-x-6' : 'translate-x-1'}`} />
+          </div>
+        </button>
+
         <button
           onClick={handleAdd}
-          className="w-full bg-[#1560FF] text-white font-semibold py-3 rounded-xl active:scale-95 transition-transform"
+          disabled={!title.trim()}
+          className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base disabled:opacity-40"
         >
           Add Event
         </button>
