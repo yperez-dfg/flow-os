@@ -3,7 +3,6 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpIcon, Mic } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { parseMessage } from '@/lib/smart-parser'
 import { usePlannerStore } from '@/store/planner'
 import { useCalendarStore } from '@/store/calendar'
 import { useBudgetStore } from '@/store/budget'
@@ -54,69 +53,43 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!message.trim()) return
-    const result = parseMessage(message)
-
-    switch (result.type) {
-      case 'task':
-        addTask(result.data)
-        showToast(`✓ Task added: ${result.data.title}`)
-        break
-      case 'reminder':
-        addEvent(result.data)
-        showToast(`✓ Reminder set: ${result.data.title}`)
-        break
-      case 'goal':
-        addGoal({ ...result.data, current: 0, weekOf: new Date().toISOString().split('T')[0] })
-        showToast(`✓ Goal created: ${result.data.title}`)
-        break
-      case 'meal':
-        addMeal(result.data)
-        showToast(`✓ Meal logged: ${result.data.name}`)
-        break
-      case 'expense':
-        addTransaction(result.data)
-        showToast(`✓ Expense added: $${result.data.amount}`)
-        break
-      case 'recurring_expense': {
-        const { items } = result
-        items.forEach(item => {
-          const cat = categories.find(c => c.name === item.category)
-          addRecurringExpense({
-            name: item.name,
-            amount: item.amount,
-            category: item.category,
-            dueDay: item.dueDay,
-            color: cat?.color ?? '#1560FF',
-            active: true,
-          })
-          // Auto-add due date to calendar
-          const today = new Date()
-          const dueDate = new Date(today.getFullYear(), today.getMonth(), item.dueDay)
-          if (dueDate <= today) dueDate.setMonth(dueDate.getMonth() + 1)
-          addEvent({
-            title: `💳 ${item.name} — $${item.amount}`,
-            date: dueDate.toISOString().split('T')[0],
-            color: cat?.color ?? '#1560FF',
-            repeat: 'monthly',
-            notify: true,
-            notifyMinutesBefore: 1440,
-            type: 'personal',
-            notes: `Recurring: $${item.amount}/mo`,
-          })
-        })
-        const names = items.map(i => i.name).join(', ')
-        showToast(`✓ ${items.length} recurring bill${items.length > 1 ? 's' : ''} added: ${names}`)
-        break
-      }
-      default:
-        showToast('Try: "remind me to call Carlos at 3pm"', 'error')
-        return
-    }
-
+    const text = message.trim()
     setMessage('')
     if (textareaRef.current) textareaRef.current.style.height = '48px'
+
+    try {
+      const res = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      })
+      const result = await res.json()
+
+      switch (result.type) {
+        case 'task':
+          addTask(result.data)
+          showToast(`✓ Task added: ${result.data.title}`)
+          break
+        case 'reminder':
+          addEvent(result.data)
+          showToast(`✓ Reminder set: ${result.data.title}`)
+          break
+        case 'goal':
+          addGoal({ ...result.data, weekOf: new Date().toISOString().split('T')[0] })
+          showToast(`✓ Goal created: ${result.data.title}`)
+          break
+        case 'expense':
+          addTransaction(result.data)
+          showToast(`✓ Expense added: $${result.data.amount}`)
+          break
+        default:
+          showToast(result.message ?? 'Try: "remind me to call Carlos at 3pm"', 'error')
+      }
+    } catch {
+      showToast('Something went wrong. Try again.', 'error')
+    }
   }
 
   const handleVoice = () => {
