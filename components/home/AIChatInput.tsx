@@ -72,20 +72,61 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
           addTask(result.data)
           showToast(`✓ Task added: ${result.data.title}`)
           break
+
         case 'reminder':
           addEvent(result.data)
           showToast(`✓ Reminder set: ${result.data.title}`)
           break
+
         case 'goal':
           addGoal({ ...result.data, weekOf: new Date().toISOString().split('T')[0] })
           showToast(`✓ Goal created: ${result.data.title}`)
           break
+
         case 'expense':
           addTransaction(result.data)
           showToast(`✓ Expense added: $${result.data.amount}`)
           break
+
+        case 'meal':
+          addMeal(result.data)
+          showToast(`✓ Meal logged: ${result.data.name} (${result.data.calories} cal)`)
+          break
+
+        case 'recurring_expense': {
+          const items = result.items as { name: string; amount: number; category: string; dueDay: number }[]
+          items.forEach((item) => {
+            const cat = categories.find((c) => c.name === item.category)
+            addRecurringExpense({
+              name: item.name,
+              amount: item.amount,
+              category: item.category,
+              dueDay: item.dueDay,
+              color: cat?.color ?? '#1560FF',
+              active: true,
+            })
+            // Auto-add to calendar as monthly recurring event
+            const now = new Date()
+            const due = new Date(now.getFullYear(), now.getMonth(), item.dueDay)
+            if (due <= now) due.setMonth(due.getMonth() + 1)
+            addEvent({
+              title: `💳 ${item.name} — $${item.amount}`,
+              date: due.toISOString().split('T')[0],
+              color: cat?.color ?? '#1560FF',
+              repeat: 'monthly',
+              notify: true,
+              notifyMinutesBefore: 1440,
+              type: 'personal',
+              notes: `Recurring: $${item.amount}/mo due on the ${item.dueDay}${item.dueDay === 1 ? 'st' : item.dueDay === 2 ? 'nd' : item.dueDay === 3 ? 'rd' : 'th'}`,
+            })
+          })
+          const names = items.map((i) => i.name).join(', ')
+          showToast(`✓ ${items.length} recurring bill${items.length > 1 ? 's' : ''} added: ${names}`)
+          break
+        }
+
         default:
-          showToast(result.message ?? 'Try: "remind me to call Carlos at 3pm"', 'error')
+          showToast(result.message ?? 'Try: "add rent $1500 recurring on the 2nd"', 'error')
       }
     } catch {
       showToast('Something went wrong. Try again.', 'error')
