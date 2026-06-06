@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { useCalendarStore } from '@/store/calendar'
 
@@ -19,6 +19,19 @@ export default function EventSheet({ open, onClose }: EventSheetProps) {
   const [notes, setNotes] = useState('')
   const [color, setColor] = useState(COLORS[0])
   const [notify, setNotify] = useState(true)
+
+  // Sync date to whichever day is selected whenever the sheet opens
+  useEffect(() => {
+    if (open) {
+      setDate(selectedDate)
+      setTitle('')
+      setTime('')
+      setEndTime('')
+      setNotes('')
+      setColor(COLORS[0])
+      setNotify(true)
+    }
+  }, [open, selectedDate])
 
   const handleAdd = () => {
     if (!title.trim()) return
