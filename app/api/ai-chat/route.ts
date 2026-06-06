@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
+const MODEL = 'llama-3.3-70b-versatile'
 
 const today = new Date().toISOString().split('T')[0]
 
@@ -44,44 +44,49 @@ Rules:
 - If truly unclear, return unknown`
 
 export async function POST(req: NextRequest) {
-  const key = process.env.GEMINI_API_KEY
-  if (!key) return NextResponse.json({ type: 'unknown', message: 'AI not configured' })
+  const key = process.env.GROQ_API_KEY
+  if (!key) return NextResponse.json({ type: 'unknown', message: 'AI not configured.' })
 
   const { message } = await req.json()
 
-  const body = {
-    contents: [{ parts: [{ text: `${SYSTEM}\n\nUser message: "${message}"` }] }],
-    generationConfig: { temperature: 0.1, maxOutputTokens: 512 },
-  }
-
   try {
-    const res = await fetch(`${GEMINI_URL}?key=${key}`, {
+    const res = await fetch(GROQ_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          { role: 'system', content: SYSTEM },
+          { role: 'user', content: message },
+        ],
+        temperature: 0.1,
+        max_tokens: 512,
+        response_format: { type: 'json_object' },
+      }),
     })
+
     const data = await res.json()
 
-    // Detect safety blocks or empty candidates
-    const finishReason = data.candidates?.[0]?.finishReason
-    if (data.promptFeedback?.blockReason || finishReason === 'SAFETY') {
-      return NextResponse.json({ type: 'unknown', message: "I can't help with that." })
+    if (!res.ok) {
+      console.error('Groq API error:', data)
+      return NextResponse.json({ type: 'unknown', message: 'AI error. Try again in a moment.' })
     }
 
-    const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+    const text: string = data.choices?.[0]?.message?.content ?? ''
     if (!text.trim()) {
-      // Gemini returned empty — log full response for debugging
-      console.error('ai-chat: empty Gemini response', JSON.stringify(data))
+      console.error('ai-chat: empty Groq response', JSON.stringify(data))
       return NextResponse.json({ type: 'unknown', message: 'No response from AI. Try rephrasing.' })
     }
 
-    const clean = text.replace(/```json\n?|```/g, '').trim()
-    return NextResponse.json(JSON.parse(clean))
+    return NextResponse.json(JSON.parse(text))
   } catch (err) {
     console.error('ai-chat error:', err)
     return NextResponse.json({
       type: 'unknown',
-      message: 'Could not understand that. Try: "add rent $1500 recurring on the 2nd"',
+      message: 'Could not understand that. Try: "add task call John" or "spent $40 on food"',
     })
   }
 }
