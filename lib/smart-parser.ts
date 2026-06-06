@@ -26,37 +26,60 @@ function parseOneRecurringItem(raw: string): RecurringExpenseItem | null {
   const text = raw.trim()
   if (!text) return null
 
-  // Extract amount — must have a number somewhere
-  const amountMatch = text.match(/\$?(\d+(?:\.\d{1,2})?)/)
+  // Extract dollar amount — prefer $X format, fall back to bare number
+  const amountMatch = text.match(/\$(\d+(?:\.\d{1,2})?)/) ?? text.match(/\b(\d+(?:\.\d{1,2})?)\b/)
   if (!amountMatch) return null
   const amount = parseFloat(amountMatch[1])
-  if (!amount) return null
+  if (!amount || amount > 100000) return null
 
   const dueDay = extractDueDay(text)
 
-  // Name = everything before the dollar sign / amount, minus "due X" suffix
+  // ── Name cleaning ──────────────────────────────────────────────
+  // IMPORTANT: strip "due …" phrases BEFORE removing bare numbers,
+  // otherwise "due the 2nd" → number removed → "due the nd" (unfixable)
   const name = text
-    .replace(/\$?\d+(?:\.\d{1,2})?/g, '')         // remove amount
-    .replace(/(?:due\s+(?:on\s+(?:the\s+)?)?|on\s+the\s+)\d{1,2}(?:st|nd|rd|th)?/gi, '') // remove due date
-    .replace(/\b\d{1,2}(?:st|nd|rd|th)\b/gi, '')  // remove standalone ordinals
+    // 1. Remove full "due [on] [the] <number><ordinal>" patterns
+    .replace(/\bdue\s+(?:on\s+)?(?:the\s+)?\d{1,2}(?:st|nd|rd|th)?\b/gi, '')
+    // 2. Remove "due the <word>" fallback (e.g. "due the th" edge case)
+    .replace(/\bdue\s+(?:the\s+)?(?:st|nd|rd|th)\b/gi, '')
+    // 3. Remove bare "on the <number><ordinal>"
+    .replace(/\bon\s+the\s+\d{1,2}(?:st|nd|rd|th)?\b/gi, '')
+    // 4. Remove remaining bare ordinals (e.g. "15th" "2nd")
+    .replace(/\b\d{1,2}(?:st|nd|rd|th)\b/gi, '')
+    // 5. Remove dollar amounts like "$1,350" or "$200"
+    .replace(/\$[\d,]+(?:\.\d{1,2})?/g, '')
+    // 6. Remove bare numbers (what's left after ordinals are gone)
+    .replace(/\b\d+(?:\.\d{1,2})?\b/g, '')
+    // 7. Remove filler words that aren't part of a name
+    .replace(/\b(?:a|an|per|each|every|month|monthly|\/mo)\b/gi, ' ')
+    // 8. Remove leading junk: "add reoccuring [for]", "and", "for" at start
+    .replace(/^(?:add\s+)?re[oc]+urr?(?:ing)?\s*(?:expense[s]?|bill[s]?)?\s*(?:for\s+)?/i, '')
+    .replace(/^(?:and|for)\s+/i, '')
+    // 9. Tidy punctuation and spaces
     .replace(/[,:.]/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
     .replace(/^./, c => c.toUpperCase())
 
-  if (!name) return null
+  if (!name || name.length < 2) return null
 
   return { name, amount, dueDay, category: guessCategory(name) }
 }
 
 // ─── Parse bulk recurring expenses from a full message ────────────
-// Strip the trigger phrase, then split the rest by commas/newlines
+// Strip trigger phrase, then split by comma / newline / "and" between items
 export function parseRecurringExpenses(text: string): RecurringExpenseItem[] {
   const stripped = text
-    .replace(/^(?:add\s+)?re[oc]+urr?(?:ing)?\s*(?:expense[s]?|bill[s]?|purchase[s]?)?\s*[:,-]?\s*/i, '')
+    // Strip trigger phrase: "add recurring expense/bill/purchase [for]"
+    .replace(/^(?:add\s+)?re[oc]+urr?(?:ing)?\s*(?:expense[s]?|bill[s]?|purchase[s]?)?\s*(?:for\s+)?\s*[:,-]?\s*/i, '')
     .trim()
 
-  // Split by comma or newline
-  const parts = stripped.split(/,|\n/).map(s => s.trim()).filter(Boolean)
+  // Split on: comma, newline, or " and " when followed by a price/item
+  // e.g. "rent $1350 due 2nd and electric $200 due 2nd"
+  const parts = stripped
+    .split(/,|\n|\s+and\s+(?=\$?\d|\w+\s+\$)/)
+    .map(s => s.trim().replace(/^(?:and|for)\s+/i, ''))
+    .filter(Boolean)
 
   return parts.flatMap(part => {
     const item = parseOneRecurringItem(part)

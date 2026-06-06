@@ -41,7 +41,7 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
                 </button>
               </div>
             )}
-            <div className="px-5 py-4 max-h-[75vh] overflow-y-auto">
+            <div className="px-5 py-4 pb-8 max-h-[80vh] overflow-y-auto overscroll-contain">
               {children}
             </div>
           </motion.div>
