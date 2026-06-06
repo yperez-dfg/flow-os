@@ -57,7 +57,7 @@ export default function BottomSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
             onClick={onClose}
           />
 
@@ -67,7 +67,7 @@ export default function BottomSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-            className="fixed left-1/2 -translate-x-1/2 w-full max-w-[430px] z-50
+            className="fixed left-1/2 -translate-x-1/2 w-full max-w-[430px] z-[70]
                        bg-white border-t border-[#E5E5EA] rounded-t-3xl
                        shadow-[0_-4px_32px_rgba(0,0,0,0.12)]
                        flex flex-col"
