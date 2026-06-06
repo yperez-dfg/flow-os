@@ -54,10 +54,10 @@ export default function WeeklyGoals() {
         </p>
         <button
           onClick={openNew}
-          className="w-7 h-7 flex items-center justify-center rounded-full bg-[#1560FF]/10 text-[#1560FF] active:scale-90 transition-transform"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-[#1560FF]/10 text-[#1560FF] active:scale-90 transition-transform"
           aria-label="Add weekly goal"
         >
-          <Plus size={14} />
+          <Plus size={18} />
         </button>
       </div>
 
@@ -79,20 +79,19 @@ export default function WeeklyGoals() {
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button
                       onClick={() => openEdit(g)}
-                      className="text-[#AEAEB2] active:text-[#1560FF] transition-colors p-1"
+                      className="text-[#AEAEB2] active:text-[#1560FF] transition-colors p-2"
                     >
-                      <Pencil size={13} />
+                      <Pencil size={15} />
                     </button>
                     <button
                       onClick={() => deleteGoal(g.id)}
-                      className="text-[#AEAEB2] active:text-[#ff4d6a] transition-colors p-1"
+                      className="text-[#AEAEB2] active:text-[#ff4d6a] transition-colors p-2"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
 
-                {/* Progress bar */}
                 <div className="w-full bg-[#E5E5EA] rounded-full h-1.5 mb-3">
                   <motion.div
                     className="h-1.5 rounded-full"
@@ -103,7 +102,6 @@ export default function WeeklyGoals() {
                   />
                 </div>
 
-                {/* Progress stepper */}
                 <div className="flex items-center justify-between">
                   <span className={`font-mono text-xs font-semibold ${done ? 'text-[#00d084]' : 'text-[#6E6E73]'}`}>
                     {g.current} / {g.target} {g.unit}
@@ -112,20 +110,20 @@ export default function WeeklyGoals() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => updateGoalProgress(g.id, Math.max(0, g.current - 1))}
-                      className="w-7 h-7 rounded-full bg-[#F5F5F7] flex items-center justify-center active:scale-90 transition-transform"
+                      className="w-9 h-9 rounded-full bg-[#F5F5F7] flex items-center justify-center active:scale-90 transition-transform"
                       disabled={g.current <= 0}
                     >
-                      <Minus size={12} className={g.current <= 0 ? 'text-[#AEAEB2]' : 'text-[#1D1D1F]'} />
+                      <Minus size={14} className={g.current <= 0 ? 'text-[#AEAEB2]' : 'text-[#1D1D1F]'} />
                     </button>
                     <span className="font-mono text-sm font-bold text-[#1D1D1F] w-6 text-center">
                       {g.current}
                     </span>
                     <button
                       onClick={() => updateGoalProgress(g.id, g.current + 1)}
-                      className="w-7 h-7 rounded-full bg-[#1560FF] text-white flex items-center justify-center active:scale-90 transition-transform"
+                      className="w-9 h-9 rounded-full bg-[#1560FF] text-white flex items-center justify-center active:scale-90 transition-transform"
                       disabled={done}
                     >
-                      <Plus size={12} />
+                      <Plus size={14} />
                     </button>
                   </div>
                 </div>
@@ -146,6 +144,15 @@ export default function WeeklyGoals() {
         open={sheetOpen}
         onClose={() => { setSheetOpen(false); setEditing(null) }}
         title={editing ? 'Edit Goal' : 'New Weekly Goal'}
+        footer={
+          <button
+            onClick={handleSave}
+            disabled={!form.title.trim() || form.target <= 0}
+            className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base disabled:opacity-40"
+          >
+            {editing ? 'Save Changes' : 'Add Goal'}
+          </button>
+        }
       >
         <div className="space-y-3">
           <input
@@ -173,7 +180,7 @@ export default function WeeklyGoals() {
               <p className="text-[10px] font-mono uppercase tracking-widest text-[#6E6E73] mb-2">Unit</p>
               <input
                 className={inputCls}
-                placeholder="times, hrs, pages…"
+                placeholder="times, hrs…"
                 value={form.unit}
                 onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
                 enterKeyHint="done"
@@ -192,13 +199,6 @@ export default function WeeklyGoals() {
               />
             </div>
           )}
-          <button
-            onClick={handleSave}
-            disabled={!form.title.trim() || form.target <= 0}
-            className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base disabled:opacity-40"
-          >
-            {editing ? 'Save Changes' : 'Add Goal'}
-          </button>
         </div>
       </BottomSheet>
     </div>

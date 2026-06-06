@@ -89,10 +89,10 @@ export default function LongTermGoals() {
         </div>
         <button
           onClick={openNew}
-          className="w-7 h-7 flex items-center justify-center rounded-full bg-[#a855f7]/10 text-[#a855f7] active:scale-90 transition-transform"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-[#a855f7]/10 text-[#a855f7] active:scale-90 transition-transform"
           aria-label="Add long-term goal"
         >
-          <Plus size={14} />
+          <Plus size={18} />
         </button>
       </div>
 
@@ -114,7 +114,6 @@ export default function LongTermGoals() {
                 className="apple-card p-4"
                 style={{ borderLeft: `3px solid ${cat.color}` }}
               >
-                {/* Header */}
                 <div className="flex items-start gap-2 mb-1">
                   <span className="text-base flex-shrink-0">{cat.emoji}</span>
                   <div className="flex-1 min-w-0">
@@ -124,16 +123,15 @@ export default function LongTermGoals() {
                     )}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button onClick={() => openEdit(g)} className="text-[#AEAEB2] active:text-[#1560FF] p-1">
-                      <Pencil size={13} />
+                    <button onClick={() => openEdit(g)} className="text-[#AEAEB2] active:text-[#1560FF] p-2">
+                      <Pencil size={14} />
                     </button>
-                    <button onClick={() => deleteLongTermGoal(g.id)} className="text-[#AEAEB2] active:text-[#ff4d6a] p-1">
-                      <Trash2 size={13} />
+                    <button onClick={() => deleteLongTermGoal(g.id)} className="text-[#AEAEB2] active:text-[#ff4d6a] p-2">
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
 
-                {/* Deadline pill */}
                 <div className="flex items-center gap-2 mb-3 mt-2">
                   <span
                     className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-full
@@ -148,7 +146,6 @@ export default function LongTermGoals() {
                   </span>
                 </div>
 
-                {/* Progress bar — your manual progress */}
                 <div className="mb-1">
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-[10px] text-[#6E6E73]">Progress</p>
@@ -181,12 +178,10 @@ export default function LongTermGoals() {
                     )}
                   </div>
                   <div className="relative w-full h-2 bg-[#E5E5EA] rounded-full overflow-hidden">
-                    {/* Time elapsed (ghost bar) */}
                     <div
                       className="absolute top-0 left-0 h-full rounded-full opacity-20"
                       style={{ width: `${timePct}%`, background: cat.color }}
                     />
-                    {/* Actual progress */}
                     <motion.div
                       className="absolute top-0 left-0 h-full rounded-full"
                       style={{ background: done ? '#00d084' : cat.color }}
@@ -217,6 +212,15 @@ export default function LongTermGoals() {
         open={sheetOpen}
         onClose={() => { setSheetOpen(false); setEditing(null) }}
         title={editing ? 'Edit Goal' : 'New Long-Term Goal'}
+        footer={
+          <button
+            onClick={handleSave}
+            disabled={!form.title.trim() || !form.targetDate}
+            className="w-full bg-[#a855f7] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base disabled:opacity-40"
+          >
+            {editing ? 'Save Changes' : 'Add Goal'}
+          </button>
+        }
       >
         <div className="space-y-3">
           <input
@@ -277,14 +281,6 @@ export default function LongTermGoals() {
               />
             </div>
           )}
-
-          <button
-            onClick={handleSave}
-            disabled={!form.title.trim() || !form.targetDate}
-            className="w-full bg-[#a855f7] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base disabled:opacity-40"
-          >
-            {editing ? 'Save Changes' : 'Add Goal'}
-          </button>
         </div>
       </BottomSheet>
     </div>

@@ -92,17 +92,17 @@ export default function CRMTaskList() {
         <div className="flex items-center gap-2">
           <button
             onClick={fetchTasks}
-            className="text-[#6E6E73] active:text-[#1560FF] transition-colors p-1"
+            className="text-[#6E6E73] active:text-[#1560FF] transition-colors p-2"
             aria-label="Refresh CRM tasks"
           >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           <button
             onClick={openNew}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-[#1560FF]/10 text-[#1560FF] active:scale-90 transition-transform"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-[#1560FF]/10 text-[#1560FF] active:scale-90 transition-transform"
             aria-label="Add CRM task"
           >
-            <Plus size={14} />
+            <Plus size={18} />
           </button>
         </div>
       </div>
@@ -118,16 +118,14 @@ export default function CRMTaskList() {
               transition={{ duration: 0.2 }}
               className="apple-card p-3 flex items-start gap-3"
             >
-              {/* Complete button */}
               <button
                 onClick={() => handleComplete(t)}
-                className="w-6 h-6 rounded-full border-2 border-[#C7C7CC] flex-shrink-0 flex items-center justify-center mt-0.5 active:bg-[#00d084] active:border-[#00d084] transition-colors"
+                className="w-7 h-7 rounded-full border-2 border-[#C7C7CC] flex-shrink-0 flex items-center justify-center mt-0.5 active:bg-[#00d084] active:border-[#00d084] transition-colors"
                 aria-label="Mark complete"
               >
-                <Check size={11} className="text-transparent" />
+                <Check size={12} className="text-transparent" />
               </button>
 
-              {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <Badge label="DFG" color="blue" />
@@ -139,27 +137,24 @@ export default function CRMTaskList() {
                 )}
               </div>
 
-              {/* Due date */}
               <p className="font-mono text-[10px] text-[#6E6E73] whitespace-nowrap flex-shrink-0">
                 {t.due}
               </p>
 
-              {/* Edit */}
               <button
                 onClick={() => openEdit(t)}
-                className="text-[#AEAEB2] active:text-[#1560FF] transition-colors p-1 flex-shrink-0"
+                className="text-[#AEAEB2] active:text-[#1560FF] transition-colors p-2 flex-shrink-0"
                 aria-label="Edit task"
               >
-                <Pencil size={13} />
+                <Pencil size={14} />
               </button>
 
-              {/* Delete */}
               <button
                 onClick={() => handleDelete(t)}
-                className="text-[#AEAEB2] active:text-[#ff4d6a] transition-colors p-1 flex-shrink-0"
+                className="text-[#AEAEB2] active:text-[#ff4d6a] transition-colors p-2 flex-shrink-0"
                 aria-label="Delete task"
               >
-                <Trash2 size={13} />
+                <Trash2 size={14} />
               </button>
             </motion.div>
           ))}
@@ -179,11 +174,21 @@ export default function CRMTaskList() {
         )}
       </div>
 
-      {/* Add / Edit Sheet */}
       <BottomSheet
         open={sheetOpen}
         onClose={closeSheet}
         title={editing ? 'Edit Task' : 'New CRM Task'}
+        footer={
+          <button
+            onClick={handleSave}
+            disabled={!form.title.trim() || saving}
+            className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base disabled:opacity-40 flex items-center justify-center gap-2"
+          >
+            {saving
+              ? <RefreshCw size={16} className="animate-spin" />
+              : editing ? 'Save Changes' : 'Add Task'}
+          </button>
+        }
       >
         <div className="space-y-3">
           <input
@@ -222,7 +227,7 @@ export default function CRMTaskList() {
                 <button
                   key={p}
                   onClick={() => setForm(f => ({ ...f, priority: p }))}
-                  className={`py-3.5 rounded-2xl text-sm font-semibold border transition-colors
+                  className={`py-4 rounded-2xl text-sm font-semibold border transition-colors
                     ${form.priority === p
                       ? p === 'High' ? 'bg-[#ff4d6a] border-[#ff4d6a] text-white'
                         : p === 'Medium' ? 'bg-[#FF9F0A] border-[#FF9F0A] text-white'
@@ -234,16 +239,6 @@ export default function CRMTaskList() {
               ))}
             </div>
           </div>
-
-          <button
-            onClick={handleSave}
-            disabled={!form.title.trim() || saving}
-            className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base disabled:opacity-40 flex items-center justify-center gap-2"
-          >
-            {saving
-              ? <RefreshCw size={16} className="animate-spin" />
-              : editing ? 'Save Changes' : 'Add Task'}
-          </button>
         </div>
       </BottomSheet>
     </div>

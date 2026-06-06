@@ -8,9 +8,9 @@ import { useCalendarStore } from '@/store/calendar'
 import { scheduleLocalNotification } from '@/lib/notifications'
 
 interface ScheduleBlock {
-  time: string      // HH:MM
+  time: string
   title: string
-  duration: number  // minutes
+  duration: number
   notes?: string
   type: 'task' | 'break' | 'buffer'
 }
@@ -155,7 +155,6 @@ export default function SchedulePlanner() {
     schedule.forEach((block) => {
       if (block.type === 'buffer') return
 
-      // 1. Add to personal tasks
       if (block.type === 'task') {
         addTask({
           title: block.title,
@@ -166,7 +165,6 @@ export default function SchedulePlanner() {
         })
       }
 
-      // 2. Add to calendar
       addEvent({
         title: block.title,
         date: selectedDate,
@@ -182,7 +180,6 @@ export default function SchedulePlanner() {
         type: 'personal',
       })
 
-      // 3. Schedule local notification 10 min before
       const [bh, bm] = block.time.split(':').map(Number)
       const blockDate = new Date(selectedDate + 'T00:00:00')
       blockDate.setHours(bh, bm - 10, 0, 0)
@@ -192,7 +189,6 @@ export default function SchedulePlanner() {
       }
     })
 
-    // 4. Generate ICS for iOS native calendar
     const ics = generateICS(schedule, selectedDate)
     const blob = new Blob([ics], { type: 'text/calendar' })
     const url = URL.createObjectURL(blob)
@@ -203,17 +199,53 @@ export default function SchedulePlanner() {
   const inputCls = `w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-4 py-4
                     text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/60 text-base`
 
+  // Footer changes per step — always pinned, always visible
+  const footer = (() => {
+    if (step === 'collect') {
+      return (
+        <button
+          onClick={() => generate()}
+          disabled={todayTasks.length === 0 && extras.length === 0}
+          className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform disabled:opacity-40 flex items-center justify-center gap-2 text-base"
+        >
+          <Sparkles size={16} /> Build My Schedule
+        </button>
+      )
+    }
+    if (step === 'review') {
+      return (
+        <button
+          onClick={lockIn}
+          className="w-full bg-[#1D1D1F] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform flex items-center justify-center gap-2 text-base"
+        >
+          <Check size={16} /> Approve & Lock In
+        </button>
+      )
+    }
+    if (step === 'locked') {
+      return (
+        <button
+          onClick={() => setOpen(false)}
+          className="w-full bg-[#F5F5F7] text-[#1560FF] font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base"
+        >
+          Done
+        </button>
+      )
+    }
+    return null
+  })()
+
   return (
     <>
       <button
         onClick={handleOpen}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1560FF]/10 text-[#1560FF] text-xs font-semibold active:scale-90 transition-transform"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#1560FF]/10 text-[#1560FF] text-xs font-semibold active:scale-90 transition-transform"
       >
         <Sparkles size={12} />
         Plan My Day
       </button>
 
-      <BottomSheet open={open} onClose={() => setOpen(false)} title="Day Planner">
+      <BottomSheet open={open} onClose={() => setOpen(false)} title="Day Planner" footer={footer}>
         <AnimatePresence mode="wait">
 
           {/* ── collect ── */}
@@ -231,7 +263,7 @@ export default function SchedulePlanner() {
                   </p>
                   <div className="space-y-1.5">
                     {todayTasks.map((t) => (
-                      <div key={t.id} className="flex items-center gap-2.5 bg-[#F5F5F7] rounded-xl px-3 py-2.5">
+                      <div key={t.id} className="flex items-center gap-2.5 bg-[#F5F5F7] rounded-xl px-3 py-3">
                         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${t.priority === 'High' ? 'bg-[#ff4d6a]' : t.priority === 'Medium' ? 'bg-[#FF9F0A]' : 'bg-[#C7C7CC]'}`} />
                         <p className="text-sm text-[#1D1D1F]">{t.title}</p>
                       </div>
@@ -252,14 +284,14 @@ export default function SchedulePlanner() {
                     enterKeyHint="done"
                     autoCapitalize="sentences"
                   />
-                  <button onClick={addExtra} className="w-12 h-[56px] rounded-2xl bg-[#1560FF] text-white flex items-center justify-center active:scale-90 transition-transform">
+                  <button onClick={addExtra} className="w-14 h-[56px] rounded-2xl bg-[#1560FF] text-white flex items-center justify-center active:scale-90 transition-transform">
                     <Plus size={18} />
                   </button>
                 </div>
                 {extras.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {extras.map((e, i) => (
-                      <span key={i} className="flex items-center gap-1 bg-[#1560FF]/10 text-[#1560FF] text-xs font-medium px-3 py-1.5 rounded-full">
+                      <span key={i} className="flex items-center gap-1 bg-[#1560FF]/10 text-[#1560FF] text-xs font-medium px-3 py-2 rounded-full">
                         {e}
                         <button onClick={() => removeExtra(i)} className="active:opacity-60"><X size={11} /></button>
                       </span>
@@ -269,14 +301,6 @@ export default function SchedulePlanner() {
               </div>
 
               {error && <p className="text-[#ff4d6a] text-xs text-center">{error}</p>}
-
-              <button
-                onClick={() => generate()}
-                disabled={todayTasks.length === 0 && extras.length === 0}
-                className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform disabled:opacity-40 flex items-center justify-center gap-2 text-base"
-              >
-                <Sparkles size={16} /> Build My Schedule
-              </button>
             </motion.div>
           )}
 
@@ -295,7 +319,6 @@ export default function SchedulePlanner() {
             <motion.div key="review" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
               {aiMessage && <p className="text-xs text-[#6E6E73] italic px-1">{aiMessage}</p>}
 
-              {/* Schedule */}
               <div className="space-y-2">
                 {schedule.map((block, i) => (
                   <div key={i} className="flex items-start gap-3 p-3.5 rounded-2xl bg-[#F5F5F7]" style={{ borderLeft: `3px solid ${TYPE_COLOR[block.type]}` }}>
@@ -311,10 +334,10 @@ export default function SchedulePlanner() {
                 ))}
               </div>
 
-              {/* Adjust */}
+              {/* Adjust request */}
               <div className="flex gap-2">
                 <input
-                  className="flex-1 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-4 py-3.5 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/60"
+                  className="flex-1 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-4 py-4 text-sm text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/60"
                   placeholder="Move gym to 7am, add more breaks…"
                   value={adjustment}
                   onChange={(e) => setAdjustment(e.target.value)}
@@ -325,19 +348,11 @@ export default function SchedulePlanner() {
                 <button
                   onClick={() => generate(adjustment.trim())}
                   disabled={!adjustment.trim() || adjusting}
-                  className="w-12 h-[52px] rounded-2xl bg-[#F5F5F7] border border-[#E5E5EA] text-[#1560FF] flex items-center justify-center active:scale-90 transition-transform disabled:opacity-40"
+                  className="w-14 h-[56px] rounded-2xl bg-[#F5F5F7] border border-[#E5E5EA] text-[#1560FF] flex items-center justify-center active:scale-90 transition-transform disabled:opacity-40"
                 >
                   {adjusting ? <RefreshCw size={15} className="animate-spin" /> : <Pencil size={15} />}
                 </button>
               </div>
-
-              {/* Approve */}
-              <button
-                onClick={lockIn}
-                className="w-full bg-[#1D1D1F] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform flex items-center justify-center gap-2 text-base"
-              >
-                <Check size={16} /> Approve & Lock In
-              </button>
             </motion.div>
           )}
 
@@ -354,22 +369,17 @@ export default function SchedulePlanner() {
                 </p>
               </div>
 
-              {/* iOS Calendar export */}
               {icsUrl && (
                 <a
                   href={icsUrl}
                   download={`flowos-${selectedDate}.ics`}
-                  className="flex items-center gap-2 px-5 py-3 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-sm font-medium text-[#1D1D1F] active:scale-95 transition-transform"
+                  className="flex items-center gap-2 px-5 py-4 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-sm font-medium text-[#1D1D1F] active:scale-95 transition-transform"
                 >
                   <CalendarDays size={16} className="text-[#1560FF]" />
                   Add to iOS Calendar
                 </a>
               )}
               <p className="text-[10px] text-[#AEAEB2]">Tap above to import into Apple Calendar with alarms</p>
-
-              <button onClick={() => setOpen(false)} className="text-[#1560FF] text-sm font-medium active:opacity-60">
-                Done
-              </button>
             </motion.div>
           )}
 

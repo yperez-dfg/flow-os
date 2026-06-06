@@ -18,6 +18,7 @@ export default function PersonalTaskList() {
     addTask({ title: title.trim(), done: false, priority, repeat: 'none', due: due || undefined })
     setTitle('')
     setDue('')
+    setPriority('Medium')
     setOpen(false)
   }
 
@@ -32,9 +33,9 @@ export default function PersonalTaskList() {
         </p>
         <button
           onClick={() => setOpen(true)}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1560FF]/10 text-[#1560FF] active:scale-90 transition-transform"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-[#1560FF]/10 text-[#1560FF] active:scale-90 transition-transform"
         >
-          <Plus size={16} />
+          <Plus size={18} />
         </button>
       </div>
 
@@ -46,14 +47,14 @@ export default function PersonalTaskList() {
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }}
-              className="apple-card px-4 py-3.5 flex items-center gap-3"
+              className="apple-card px-4 py-4 flex items-center gap-3"
             >
               <button
                 onClick={() => toggleTask(t.id)}
-                className={`w-6 h-6 rounded-full border-2 flex-shrink-0 transition-colors flex items-center justify-center
+                className={`w-7 h-7 rounded-full border-2 flex-shrink-0 transition-colors flex items-center justify-center
                   ${t.done ? 'bg-[#00d084] border-[#00d084]' : 'border-[#C7C7CC]'}`}
               >
-                {t.done && <span className="text-white text-[10px] font-bold">✓</span>}
+                {t.done && <span className="text-white text-[11px] font-bold">✓</span>}
               </button>
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-medium ${t.done ? 'line-through text-[#6E6E73]' : 'text-[#1D1D1F]'}`}>
@@ -69,9 +70,9 @@ export default function PersonalTaskList() {
               />
               <button
                 onClick={() => deleteTask(t.id)}
-                className="text-[#AEAEB2] active:text-[#ff4d6a] transition-colors p-2 -mr-2"
+                className="text-[#AEAEB2] active:text-[#ff4d6a] transition-colors p-2 -mr-1"
               >
-                <Trash2 size={15} />
+                <Trash2 size={16} />
               </button>
             </motion.div>
           ))}
@@ -81,7 +82,20 @@ export default function PersonalTaskList() {
         )}
       </div>
 
-      <BottomSheet open={open} onClose={() => setOpen(false)} title="Add Task">
+      <BottomSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Add Task"
+        footer={
+          <button
+            onClick={handleAdd}
+            disabled={!title.trim()}
+            className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base disabled:opacity-40"
+          >
+            Add Task
+          </button>
+        }
+      >
         <div className="space-y-3">
           <input
             className={inputCls}
@@ -107,7 +121,7 @@ export default function PersonalTaskList() {
                 <button
                   key={p}
                   onClick={() => setPriority(p)}
-                  className={`py-3.5 rounded-2xl text-sm font-semibold border transition-colors
+                  className={`py-4 rounded-2xl text-sm font-semibold border transition-colors
                     ${priority === p
                       ? 'bg-[#1560FF] border-[#1560FF] text-white'
                       : 'border-[#E5E5EA] text-[#6E6E73] bg-[#F5F5F7]'}`}
@@ -117,13 +131,6 @@ export default function PersonalTaskList() {
               ))}
             </div>
           </div>
-          <button
-            onClick={handleAdd}
-            disabled={!title.trim()}
-            className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base disabled:opacity-40"
-          >
-            Add Task
-          </button>
         </div>
       </BottomSheet>
     </div>
