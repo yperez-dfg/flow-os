@@ -38,7 +38,7 @@ interface FitnessState {
   weighIns: WeighIn[]
   workoutSchedule: WorkoutDay[]
   mealLog: MealEntry[]
-  logDate: string
+  mealLogDate: string
   workoutStreak: number
   calorieGoal: number
   setGoalWeight: (w: number) => void
@@ -104,7 +104,7 @@ export const useFitnessStore = create<FitnessState>()(
       weighIns: [],
       workoutSchedule: DEFAULT_SCHEDULE,
       mealLog: [],
-      logDate: new Date().toISOString().split('T')[0],
+      mealLogDate: new Date().toISOString().split('T')[0],
       workoutStreak: 0,
       calorieGoal: 2000,
       setGoalWeight: (goalWeight) => set({ goalWeight }),
@@ -152,8 +152,8 @@ export const useFitnessStore = create<FitnessState>()(
         const today = new Date().toISOString().split('T')[0]
         const entry = { ...m, id: nanoid() }
         set((s) => {
-          const log = s.logDate === today ? s.mealLog : []
-          return { mealLog: [...log, entry], logDate: today }
+          const log = s.mealLogDate === today ? s.mealLog : []
+          return { mealLog: [...log, entry], mealLogDate: today }
         })
         sb.from('meal_log').insert({
           id: entry.id, name: entry.name, calories: entry.calories,
@@ -171,14 +171,14 @@ export const useFitnessStore = create<FitnessState>()(
       caloriesConsumed: () => {
         const s = get()
         const today = new Date().toISOString().split('T')[0]
-        if (s.logDate !== today) return 0
+        if (s.mealLogDate !== today) return 0
         return s.mealLog.reduce((sum, m) => sum + m.calories, 0)
       },
       checkAndResetDay: () =>
         set((s) => {
           const today = new Date().toISOString().split('T')[0]
-          if (s.logDate === today) return {}
-          return { mealLog: [], logDate: today }
+          if (s.mealLogDate === today) return {}
+          return { mealLog: [], mealLogDate: today }
         }),
       hydrateMeals: async () => {
         const today = new Date().toISOString().split('T')[0]
@@ -189,7 +189,7 @@ export const useFitnessStore = create<FitnessState>()(
               id: r.id, name: r.name, calories: r.calories,
               protein: r.protein, carbs: r.carbs, fat: r.fat, time: r.time,
             })),
-            logDate: today,
+            mealLogDate: today,
           })
         }
       },
