@@ -1,11 +1,11 @@
 'use client'
 import { useCalendarStore } from '@/store/calendar'
+import { expandEvents } from '@/lib/calendar-utils'
 import Badge from '@/components/ui/Badge'
 
 export default function DayView() {
   const { selectedDate, events } = useCalendarStore()
-  const dayEvents = events
-    .filter((e) => e.date === selectedDate)
+  const dayEvents = expandEvents(events, selectedDate, selectedDate)
     .sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))
 
   return (
