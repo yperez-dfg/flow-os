@@ -2,12 +2,15 @@
 import { useState } from 'react'
 import CalendarHeader from '@/components/calendar/CalendarHeader'
 import MonthView from '@/components/calendar/MonthView'
+import WeekView from '@/components/calendar/WeekView'
 import DayView from '@/components/calendar/DayView'
 import EventSheet from '@/components/calendar/EventSheet'
+import { useCalendarStore } from '@/store/calendar'
 import { Plus } from 'lucide-react'
 
 export default function CalendarPage() {
   const [sheetOpen, setSheetOpen] = useState(false)
+  const view = useCalendarStore((s) => s.view)
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] px-4 pt-6 pb-24">
@@ -22,8 +25,14 @@ export default function CalendarPage() {
         </button>
       </div>
       <CalendarHeader />
-      <MonthView />
-      <DayView />
+      {view === 'week' && <WeekView />}
+      {view === 'month' && (
+        <>
+          <MonthView />
+          <DayView />
+        </>
+      )}
+      {view === 'day' && <DayView />}
       <EventSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
     </div>
   )
