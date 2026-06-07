@@ -983,8 +983,28 @@ git commit -m "feat: morning brief API — Groq JSON mode, date-aware system pro
 
 **Files:**
 - Create: `components/home/MorningBrief.tsx`
+- Modify: `supabase-schema.sql` (add `morning_briefs` table)
 
-- [ ] **Step 1: Create `components/home/MorningBrief.tsx`**
+**Note:** Cache briefs in Supabase — never localStorage. One Groq call per calendar day max.
+
+- [ ] **Step 1: Add `morning_briefs` table to `supabase-schema.sql`**
+
+Append to the end of `supabase-schema.sql`:
+```sql
+-- Morning Brief daily cache (one row per date, avoids repeat Groq calls)
+create table if not exists morning_briefs (
+  date text primary key,
+  bullets jsonb default '[]',
+  focus text default '',
+  created_at text default ''
+);
+
+alter table morning_briefs disable row level security;
+```
+
+Run this SQL in the Supabase Dashboard → SQL Editor.
+
+- [ ] **Step 2: Create `components/home/MorningBrief.tsx`**
 
 ```typescript
 'use client'
@@ -1015,16 +1035,6 @@ export default function MorningBrief() {
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
-    const cacheKey = `flowos-brief-${today}`
-
-    const cached = localStorage.getItem(cacheKey)
-    if (cached) {
-      try {
-        setBrief(JSON.parse(cached))
-        setLoading(false)
-        return
-      } catch { /* fall through to fetch */ }
-    }
 
     const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' })
     const todayDay = (['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const)[new Date().getDay()]
@@ -1041,6 +1051,19 @@ export default function MorningBrief() {
 
     ;(async () => {
       try {
+        // 1. Check Supabase cache first — never localStorage
+        const { data: cached } = await sb
+          .from('morning_briefs')
+          .select('bullets, focus')
+          .eq('date', today)
+          .single()
+        if (cached?.focus) {
+          setBrief({ bullets: cached.bullets as string[], focus: cached.focus })
+          setLoading(false)
+          return
+        }
+
+        // 2. Pull CRM tasks due today
         const { data: taskData } = await sb
           .from('tasks')
           .select('*')
@@ -1050,6 +1073,7 @@ export default function MorningBrief() {
           .map((r) => fromSnake<CRMTask>(r))
           .map(t => ({ title: t.title, related: t.related }))
 
+        // 3. Call Groq
         const res = await fetch('/api/morning-brief', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1065,11 +1089,18 @@ export default function MorningBrief() {
           }),
         })
         const data: BriefData = await res.json()
+
         if (data.focus) {
           setBrief(data)
-          localStorage.setItem(cacheKey, JSON.stringify(data))
+          // 4. Persist to Supabase (upsert in case of race)
+          await sb.from('morning_briefs').upsert({
+            date: today,
+            bullets: data.bullets,
+            focus: data.focus,
+            created_at: new Date().toISOString(),
+          })
         }
-      } catch { /* silent fail */ } finally {
+      } catch { /* silent fail — brief just won't show */ } finally {
         setLoading(false)
       }
     })()
@@ -1134,15 +1165,15 @@ export default function MorningBrief() {
 }
 ```
 
-- [ ] **Step 2: Verify build**
+- [ ] **Step 3: Verify build**
 
 Run: `npx tsc --noEmit`
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add components/home/MorningBrief.tsx
-git commit -m "feat: MorningBrief component — localStorage cache, expand/collapse, streak chip"
+git add components/home/MorningBrief.tsx supabase-schema.sql
+git commit -m "feat: MorningBrief component — Supabase cache (no localStorage), expand/collapse, streak chip"
 ```
 
 ---
@@ -2779,49 +2810,86 @@ git commit -m "fix: pass existing calendar events to schedule API to prevent dou
 
 **Files:**
 - Modify: `store/fitness.ts`, `components/fitness/GymChecklist.tsx`
+- Modify: `supabase-schema.sql` (add `exercise_log` table)
 
-This replaces the `exercise.done` field mutation introduced in Task 10. The `done` field on the template is no longer meaningful — completion is tracked per-day in `exerciseLog`.
+This replaces the `exercise.done` field mutation introduced in Task 10. The `done` field on the template is no longer meaningful — completion is tracked per-day in `exerciseLog`. **All exercise log data syncs to Supabase — never relies on localStorage alone.**
 
-- [ ] **Step 1: Update `FitnessState` interface in `store/fitness.ts`**
+- [ ] **Step 1: Add `exercise_log` table to `supabase-schema.sql`**
+
+Append to `supabase-schema.sql`:
+```sql
+-- Per-day exercise completion log (log_key = "Mon-2026-06-09", exercises = completed exercise names)
+create table if not exists exercise_log (
+  log_key text primary key,
+  exercises text[] default '{}',
+  created_at text default ''
+);
+
+alter table exercise_log disable row level security;
+```
+
+Run this SQL in the Supabase Dashboard → SQL Editor.
+
+- [ ] **Step 2: Update `FitnessState` interface in `store/fitness.ts`**
 
 Add to the interface:
 ```typescript
 exerciseLog: Record<string, string[]>
 toggleExerciseLog: (day: string, exName: string) => void
 isExerciseDone: (day: string, exName: string) => boolean
+hydrateExerciseLog: (date: string) => Promise<void>
 ```
 
-- [ ] **Step 2: Initialize `exerciseLog` in store state**
+- [ ] **Step 3: Initialize `exerciseLog` in store state**
 
 After `lastStreakDate: '',` add:
 ```typescript
 exerciseLog: {},
 ```
 
-- [ ] **Step 3: Add `toggleExerciseLog` and `isExerciseDone` actions**
+- [ ] **Step 4: Add `toggleExerciseLog`, `isExerciseDone`, and `hydrateExerciseLog` actions**
 
 After the `markWorkoutDone` action, add:
 ```typescript
-toggleExerciseLog: (day, exName) =>
-  set((s) => {
-    const today = new Date().toISOString().split('T')[0]
-    const key = `${day}-${today}`
-    const current = s.exerciseLog[key] ?? []
-    const next = current.includes(exName)
-      ? current.filter(n => n !== exName)
-      : [...current, exName]
-    return { exerciseLog: { ...s.exerciseLog, [key]: next } }
-  }),
+toggleExerciseLog: (day, exName) => {
+  const today = new Date().toISOString().split('T')[0]
+  const key = `${day}-${today}`
+  const current = get().exerciseLog[key] ?? []
+  const next = current.includes(exName)
+    ? current.filter(n => n !== exName)
+    : [...current, exName]
+  set((s) => ({ exerciseLog: { ...s.exerciseLog, [key]: next } }))
+  // Sync to Supabase — never rely on localStorage alone
+  sb.from('exercise_log').upsert({
+    log_key: key,
+    exercises: next,
+    created_at: new Date().toISOString(),
+  }).then()
+},
 isExerciseDone: (day, exName) => {
   const today = new Date().toISOString().split('T')[0]
   const key = `${day}-${today}`
-  return (useFitnessStore.getState().exerciseLog[key] ?? []).includes(exName)
+  return (get().exerciseLog[key] ?? []).includes(exName)
+},
+hydrateExerciseLog: async (date: string) => {
+  // Fetch all log keys for a given date from Supabase
+  const { data } = await sb
+    .from('exercise_log')
+    .select('log_key, exercises')
+    .like('log_key', `%-${date}`)
+  if (data && data.length > 0) {
+    const merged: Record<string, string[]> = {}
+    data.forEach((row: { log_key: string; exercises: string[] }) => {
+      merged[row.log_key] = row.exercises
+    })
+    set((s) => ({ exerciseLog: { ...s.exerciseLog, ...merged } }))
+  }
 },
 ```
 
-Note: `isExerciseDone` is a selector that reads from `getState()` — it is not reactive from `set`. Components that need reactivity should read `exerciseLog` directly from the store and compute the check inline.
+Note: `isExerciseDone` uses `get()` — it reads current store state synchronously. Components that need reactivity should destructure `exerciseLog` directly from the store and compute the check inline.
 
-- [ ] **Step 4: Rewrite `GymChecklist.tsx` to use `exerciseLog`**
+- [ ] **Step 5: Rewrite `GymChecklist.tsx` to use `exerciseLog`**
 
 Replace the entire file:
 ```typescript
@@ -2899,15 +2967,15 @@ export default function GymChecklist({ day, exercises, editing, onRemove }: GymC
 }
 ```
 
-- [ ] **Step 5: Verify build**
+- [ ] **Step 6: Verify build**
 
 Run: `npx tsc --noEmit`
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add store/fitness.ts components/fitness/GymChecklist.tsx
-git commit -m "fix: per-day exercise log — exercises reset each day, workoutSchedule is read-only template"
+git add store/fitness.ts components/fitness/GymChecklist.tsx supabase-schema.sql
+git commit -m "fix: per-day exercise log — Supabase-backed, exercises reset each day, workoutSchedule read-only"
 ```
 
 ---

@@ -10,7 +10,7 @@ export default function CalendarPage() {
   const [sheetOpen, setSheetOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] px-4 pt-6 pb-4">
+    <div className="min-h-screen bg-[#F5F5F7] px-4 pt-6 pb-24">
       <div className="flex items-center justify-between mb-4">
         <h1 className="font-display italic text-2xl font-normal text-[#1D1D1F]">Calendar</h1>
         <button
