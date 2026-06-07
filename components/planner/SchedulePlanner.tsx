@@ -156,13 +156,15 @@ export default function SchedulePlanner() {
       if (block.type === 'buffer') return
 
       if (block.type === 'task') {
-        addTask({
-          title: block.title,
-          done: false,
-          priority: 'Medium',
-          repeat: 'none',
-          due: selectedDate,
-        })
+        if (!personalTasks.some(t => t.title === block.title)) {
+          addTask({
+            title: block.title,
+            done: false,
+            priority: 'Medium',
+            repeat: 'none',
+            due: selectedDate,
+          })
+        }
       }
 
       addEvent({
