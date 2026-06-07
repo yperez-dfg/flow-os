@@ -1,5 +1,6 @@
 import CRMTaskList from '@/components/planner/CRMTaskList'
 import PersonalTaskList from '@/components/planner/PersonalTaskList'
+import Routines from '@/components/planner/Routines'
 import WeeklyGoals from '@/components/planner/WeeklyGoals'
 import LongTermGoals from '@/components/planner/LongTermGoals'
 import SchedulePlanner from '@/components/planner/SchedulePlanner'
@@ -16,6 +17,9 @@ export default function PlannerPage() {
       <div className="w-full h-px bg-[#E5E5EA]" />
 
       <PersonalTaskList />
+      <div className="w-full h-px bg-[#E5E5EA]" />
+
+      <Routines />
       <div className="w-full h-px bg-[#E5E5EA]" />
 
       <WeeklyGoals />
