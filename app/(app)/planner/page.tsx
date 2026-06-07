@@ -1,17 +1,22 @@
 'use client'
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import CRMTaskList from '@/components/planner/CRMTaskList'
 import PersonalTaskList from '@/components/planner/PersonalTaskList'
 import Routines from '@/components/planner/Routines'
 import WeeklyGoals from '@/components/planner/WeeklyGoals'
 import LongTermGoals from '@/components/planner/LongTermGoals'
 import SchedulePlanner from '@/components/planner/SchedulePlanner'
-import DaySchedule from '@/components/planner/DaySchedule'
 import { usePlannerStore } from '@/store/planner'
 
+type PlannerView = 'today' | 'all'
+
 export default function PlannerPage() {
-  const hydrate = usePlannerStore((s) => s.hydrate)
-  useEffect(() => { hydrate() }, [hydrate])
+  const [planView, setPlanView] = useState<PlannerView>('today')
+  const { resetDailyTasksIfNeeded } = usePlannerStore()
+
+  useEffect(() => {
+    resetDailyTasksIfNeeded()
+  }, [resetDailyTasksIfNeeded])
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] px-4 pt-6 pb-24 space-y-6">
@@ -20,12 +25,27 @@ export default function PlannerPage() {
         <SchedulePlanner />
       </div>
 
-      <DaySchedule />
+      {/* Today / All toggle */}
+      <div className="flex bg-[#E5E5EA] rounded-2xl p-1">
+        {(['today', 'all'] as PlannerView[]).map((v) => (
+          <button
+            key={v}
+            onClick={() => setPlanView(v)}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all
+              ${planView === v
+                ? 'bg-white text-[#1D1D1F] shadow-sm'
+                : 'text-[#6E6E73]'
+              }`}
+          >
+            {v === 'today' ? 'Today' : 'All'}
+          </button>
+        ))}
+      </div>
 
-      <CRMTaskList />
+      <CRMTaskList todayOnly={planView === 'today'} />
       <div className="w-full h-px bg-[#E5E5EA]" />
 
-      <PersonalTaskList />
+      <PersonalTaskList todayOnly={planView === 'today'} />
       <div className="w-full h-px bg-[#E5E5EA]" />
 
       <Routines />

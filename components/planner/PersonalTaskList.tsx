@@ -6,8 +6,12 @@ import Badge from '@/components/ui/Badge'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { Plus, Trash2 } from 'lucide-react'
 
-export default function PersonalTaskList() {
+export default function PersonalTaskList({ todayOnly = false }: { todayOnly?: boolean }) {
   const { personalTasks, addTask, toggleTask, deleteTask } = usePlannerStore()
+  const today = new Date().toISOString().split('T')[0]
+  const displayTasks = todayOnly
+    ? personalTasks.filter(t => !t.done && (t.due === today || !t.due))
+    : personalTasks
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [priority, setPriority] = useState<'High' | 'Medium' | 'Low'>('Medium')
@@ -41,7 +45,7 @@ export default function PersonalTaskList() {
 
       <div className="space-y-2">
         <AnimatePresence>
-          {personalTasks.map((t) => (
+          {displayTasks.map((t) => (
             <motion.div
               key={t.id}
               initial={{ opacity: 0, x: -16 }}
@@ -77,7 +81,7 @@ export default function PersonalTaskList() {
             </motion.div>
           ))}
         </AnimatePresence>
-        {personalTasks.length === 0 && (
+        {displayTasks.length === 0 && (
           <p className="text-[#6E6E73] text-sm text-center py-6">No tasks — tap + to add one</p>
         )}
       </div>

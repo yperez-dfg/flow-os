@@ -15,7 +15,7 @@ const EMPTY: Omit<CRMTask, 'id' | 'done'> = {
   title: '', due: '', priority: 'Medium', related: '',
 }
 
-export default function CRMTaskList() {
+export default function CRMTaskList({ todayOnly = false }: { todayOnly?: boolean }) {
   const [tasks, setTasks] = useState<CRMTask[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -25,14 +25,13 @@ export default function CRMTaskList() {
 
   const fetchTasks = useCallback(async () => {
     setLoading(true)
-    const { data } = await sb
-      .from('tasks')
-      .select('*')
-      .eq('done', false)
-      .order('due', { ascending: true })
+    const today = new Date().toISOString().split('T')[0]
+    let query = sb.from('tasks').select('*').eq('done', false).order('due', { ascending: true })
+    if (todayOnly) query = query.lte('due', today)
+    const { data } = await query
     setTasks((data ?? []).map((r) => fromSnake<CRMTask>(r)))
     setLoading(false)
-  }, [])
+  }, [todayOnly])
 
   useEffect(() => { fetchTasks() }, [fetchTasks])
 
