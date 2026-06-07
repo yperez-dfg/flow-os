@@ -41,7 +41,6 @@ interface FitnessState {
   mealLogDate: string
   workoutStreak: number
   lastStreakDate: string
-  calorieGoal: number
   exerciseLog: Record<string, string[]>
   toggleExerciseLog: (day: string, exName: string) => void
   isExerciseDone: (day: string, exName: string) => boolean
@@ -55,7 +54,6 @@ interface FitnessState {
   addMeal: (m: Omit<MealEntry, 'id'>) => void
   deleteMeal: (id: string) => void
   markWorkoutDone: () => void
-  setCalorieGoal: (n: number) => void
   caloriesConsumed: () => number
   checkAndResetDay: () => void
   hydrateMeals: () => Promise<void>
@@ -112,7 +110,6 @@ export const useFitnessStore = create<FitnessState>()(
       mealLogDate: new Date().toISOString().split('T')[0],
       workoutStreak: 0,
       lastStreakDate: '',
-      calorieGoal: 2000,
       exerciseLog: {},
       setGoalWeight: (goalWeight) => set({ goalWeight }),
       addWeighIn: (weight) =>
@@ -211,7 +208,6 @@ export const useFitnessStore = create<FitnessState>()(
           set((s) => ({ exerciseLog: { ...s.exerciseLog, ...merged } }))
         }
       },
-      setCalorieGoal: (calorieGoal) => set({ calorieGoal }),
       caloriesConsumed: () => {
         const s = get()
         const today = new Date().toISOString().split('T')[0]
