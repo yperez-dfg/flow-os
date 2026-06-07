@@ -36,6 +36,7 @@ interface BudgetState {
   recurringExpenses: RecurringExpense[]
   setIncome: (n: number) => void
   addCategory: (c: Omit<BudgetCategory, 'id'>) => void
+  removeCategory: (id: string) => void
   addTransaction: (t: Omit<Transaction, 'id'>) => void
   deleteTransaction: (id: string) => void
   archiveMonth: () => void
@@ -65,6 +66,10 @@ export const useBudgetStore = create<BudgetState>()(
       addCategory: (c) =>
         set((s) => ({
           categories: [...s.categories, { ...c, id: nanoid() }],
+        })),
+      removeCategory: (id) =>
+        set((s) => ({
+          categories: s.categories.filter((c) => c.id !== id),
         })),
       addTransaction: (t) =>
         set((s) => ({
