@@ -12,6 +12,7 @@ export default function WeeklyGoals() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState<WeeklyGoal | null>(null)
   const [form, setForm] = useState(EMPTY)
+  const [progressEditId, setProgressEditId] = useState<string | null>(null)
 
   const weekOf = (() => {
     const d = new Date()
@@ -115,9 +116,39 @@ export default function WeeklyGoals() {
                     >
                       <Minus size={14} className={g.current <= 0 ? 'text-[#AEAEB2]' : 'text-[#1D1D1F]'} />
                     </button>
-                    <span className="font-mono text-sm font-bold text-[#1D1D1F] w-6 text-center">
-                      {g.current}
-                    </span>
+                    {progressEditId === g.id ? (
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        defaultValue={g.current}
+                        autoFocus
+                        onFocus={(e) => e.target.select()}
+                        onBlur={(e) => {
+                          const v = Math.max(0, Number(e.target.value) || 0)
+                          updateGoalProgress(g.id, v)
+                          setProgressEditId(null)
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const v = Math.max(0, Number((e.target as HTMLInputElement).value) || 0)
+                            updateGoalProgress(g.id, v)
+                            setProgressEditId(null)
+                          }
+                        }}
+                        className="font-mono text-sm font-bold text-[#1D1D1F] w-12 text-center
+                                   bg-[#F5F5F7] border border-[#1560FF]/40 rounded-lg py-1 outline-none"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => setProgressEditId(g.id)}
+                        className="font-mono text-sm font-bold text-[#1D1D1F] w-12 text-center
+                                   px-2 py-1 rounded-lg active:bg-[#F5F5F7] transition-colors"
+                        aria-label="Edit progress"
+                      >
+                        {g.current}
+                      </button>
+                    )}
                     <button
                       onClick={() => updateGoalProgress(g.id, g.current + 1)}
                       className="w-9 h-9 rounded-full bg-[#1560FF] text-white flex items-center justify-center active:scale-90 transition-transform"

@@ -1,13 +1,16 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useFitnessStore } from '@/store/fitness'
 import RingProgress from '@/components/ui/RingProgress'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { Plus, Trash2 } from 'lucide-react'
 
 export default function CalorieRing() {
-  const { calorieGoal, mealLog, addMeal, deleteMeal, caloriesConsumed } =
+  const { calorieGoal, mealLog, addMeal, deleteMeal, caloriesConsumed, checkAndResetDay } =
     useFitnessStore()
+
+  useEffect(() => { checkAndResetDay() }, [checkAndResetDay])
+
   const consumed = caloriesConsumed()
   const pct = calorieGoal > 0 ? (consumed / calorieGoal) * 100 : 0
   const remaining = calorieGoal - consumed
@@ -56,7 +59,7 @@ export default function CalorieRing() {
         </div>
       </div>
       <div className="space-y-1.5 max-h-40 overflow-y-auto">
-        {mealLog.map((m) => (
+        {todayMeals.map((m) => (
           <div key={m.id} className="flex items-center gap-2 text-sm">
             <span className="flex-1 text-[#1D1D1F] truncate">{m.name}</span>
             <span className="font-mono text-xs text-[#6E6E73] whitespace-nowrap">
@@ -71,37 +74,47 @@ export default function CalorieRing() {
             </button>
           </div>
         ))}
-        {mealLog.length === 0 && (
+        {todayMeals.length === 0 && (
           <p className="text-[#6E6E73] text-xs text-center py-2">
             No meals logged today
           </p>
         )}
       </div>
-      <BottomSheet open={open} onClose={() => setOpen(false)} title="Log Meal">
+      <BottomSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Log Meal"
+        footer={
+          <button
+            onClick={handleAdd}
+            disabled={!name.trim() || !cals}
+            className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base disabled:opacity-40"
+          >
+            Log Meal
+          </button>
+        }
+      >
         <div className="space-y-4">
           <input
-            className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
-                       text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50"
+            className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-4 py-4
+                       text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50 text-base"
             placeholder="Meal name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoFocus
+            autoCapitalize="sentences"
+            enterKeyHint="next"
           />
           <input
             type="number"
             inputMode="numeric"
-            className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3
-                       text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50 font-mono"
+            className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-4 py-4
+                       text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/50 font-mono text-base"
             placeholder="Calories"
             value={cals}
             onChange={(e) => setCals(e.target.value)}
+            enterKeyHint="done"
           />
-          <button
-            onClick={handleAdd}
-            className="w-full bg-[#1560FF] text-white font-semibold py-3 rounded-xl active:scale-95 transition-transform"
-          >
-            Log
-          </button>
         </div>
       </BottomSheet>
     </div>

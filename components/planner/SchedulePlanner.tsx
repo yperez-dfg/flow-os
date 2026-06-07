@@ -86,7 +86,7 @@ export default function SchedulePlanner() {
   const [error, setError] = useState('')
   const [icsUrl, setIcsUrl] = useState('')
 
-  const { personalTasks, addTask } = usePlannerStore()
+  const { personalTasks, addTask, setLockedSchedule } = usePlannerStore()
   const { addEvent, selectedDate } = useCalendarStore()
 
   const todayTasks = personalTasks.filter((t) => !t.done)
@@ -188,6 +188,8 @@ export default function SchedulePlanner() {
         scheduleLocalNotification(`Coming up: ${block.title}`, 'Starts in 10 minutes', delay)
       }
     })
+
+    setLockedSchedule(schedule, selectedDate)
 
     const ics = generateICS(schedule, selectedDate)
     const blob = new Blob([ics], { type: 'text/calendar' })

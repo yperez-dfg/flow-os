@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
+import { sb } from '@/lib/supabase'
 
 export interface WeighIn {
   id: string
@@ -51,6 +52,8 @@ interface FitnessState {
   markWorkoutDone: () => void
   setCalorieGoal: (n: number) => void
   caloriesConsumed: () => number
+  checkAndResetDay: () => void
+  hydrateMeals: () => Promise<void>
 }
 
 const DEFAULT_SCHEDULE: WorkoutDay[] = [
@@ -145,15 +148,51 @@ export const useFitnessStore = create<FitnessState>()(
             d.day === day ? { ...d, type } : d
           ),
         })),
-      addMeal: (m) =>
-        set((s) => ({ mealLog: [...s.mealLog, { ...m, id: nanoid() }] })),
-      deleteMeal: (id) =>
-        set((s) => ({ mealLog: s.mealLog.filter((m) => m.id !== id) })),
+      addMeal: (m) => {
+        const today = new Date().toISOString().split('T')[0]
+        const entry = { ...m, id: nanoid() }
+        set((s) => {
+          const log = s.logDate === today ? s.mealLog : []
+          return { mealLog: [...log, entry], logDate: today }
+        })
+        sb.from('meal_log').insert({
+          id: entry.id, name: entry.name, calories: entry.calories,
+          protein: entry.protein, carbs: entry.carbs, fat: entry.fat,
+          time: entry.time, log_date: today,
+        }).then()
+      },
+      deleteMeal: (id) => {
+        set((s) => ({ mealLog: s.mealLog.filter((m) => m.id !== id) }))
+        sb.from('meal_log').delete().eq('id', id).then()
+      },
       markWorkoutDone: () =>
         set((s) => ({ workoutStreak: s.workoutStreak + 1 })),
       setCalorieGoal: (calorieGoal) => set({ calorieGoal }),
-      caloriesConsumed: () =>
-        get().mealLog.reduce((sum, m) => sum + m.calories, 0),
+      caloriesConsumed: () => {
+        const s = get()
+        const today = new Date().toISOString().split('T')[0]
+        if (s.logDate !== today) return 0
+        return s.mealLog.reduce((sum, m) => sum + m.calories, 0)
+      },
+      checkAndResetDay: () =>
+        set((s) => {
+          const today = new Date().toISOString().split('T')[0]
+          if (s.logDate === today) return {}
+          return { mealLog: [], logDate: today }
+        }),
+      hydrateMeals: async () => {
+        const today = new Date().toISOString().split('T')[0]
+        const { data } = await sb.from('meal_log').select('*').eq('log_date', today)
+        if (data) {
+          set({
+            mealLog: data.map((r) => ({
+              id: r.id, name: r.name, calories: r.calories,
+              protein: r.protein, carbs: r.carbs, fat: r.fat, time: r.time,
+            })),
+            logDate: today,
+          })
+        }
+      },
     }),
     { name: 'flowos-fitness' }
   )

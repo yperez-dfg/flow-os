@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import WeightChart from '@/components/fitness/WeightChart'
 import WorkoutSchedule from '@/components/fitness/WorkoutSchedule'
 import CalorieRing from '@/components/fitness/CalorieRing'
@@ -10,9 +10,11 @@ import { buildWorkoutEvents } from '@/lib/workout-calendar-sync'
 import { CalendarDays, Check } from 'lucide-react'
 
 export default function FitnessPage() {
-  const { workoutSchedule } = useFitnessStore()
+  const { workoutSchedule, hydrateMeals } = useFitnessStore()
   const { addEvent } = useCalendarStore()
   const [synced, setSynced] = useState(false)
+
+  useEffect(() => { hydrateMeals() }, [hydrateMeals])
 
   const syncToCalendar = () => {
     const events = buildWorkoutEvents(workoutSchedule)
