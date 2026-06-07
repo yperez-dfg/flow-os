@@ -40,6 +40,7 @@ interface FitnessState {
   mealLog: MealEntry[]
   mealLogDate: string
   workoutStreak: number
+  lastStreakDate: string
   calorieGoal: number
   setGoalWeight: (w: number) => void
   addWeighIn: (weight: number) => void
@@ -106,6 +107,7 @@ export const useFitnessStore = create<FitnessState>()(
       mealLog: [],
       mealLogDate: new Date().toISOString().split('T')[0],
       workoutStreak: 0,
+      lastStreakDate: '',
       calorieGoal: 2000,
       setGoalWeight: (goalWeight) => set({ goalWeight }),
       addWeighIn: (weight) =>
@@ -166,7 +168,11 @@ export const useFitnessStore = create<FitnessState>()(
         sb.from('meal_log').delete().eq('id', id).then()
       },
       markWorkoutDone: () =>
-        set((s) => ({ workoutStreak: s.workoutStreak + 1 })),
+        set((s) => {
+          const today = new Date().toISOString().split('T')[0]
+          if (s.lastStreakDate === today) return s
+          return { workoutStreak: s.workoutStreak + 1, lastStreakDate: today }
+        }),
       setCalorieGoal: (calorieGoal) => set({ calorieGoal }),
       caloriesConsumed: () => {
         const s = get()
