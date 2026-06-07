@@ -25,11 +25,15 @@ export async function POST(req: NextRequest) {
   const key = process.env.GROQ_API_KEY
   if (!key) return NextResponse.json({ error: 'GROQ_API_KEY not set' }, { status: 500 })
 
-  const { tasks, wakeTime = '08:00', currentSchedule, adjustments } = await req.json()
+  const { tasks, wakeTime = '08:00', currentSchedule, adjustments, existingEvents } = await req.json()
+
+  const existingBlock = existingEvents && existingEvents.length > 0
+    ? `\nExisting calendar events (do NOT schedule over these):\n${(existingEvents as { time: string; title: string }[]).map(e => `- ${e.time}: ${e.title}`).join('\n')}`
+    : ''
 
   const userContent = adjustments
     ? `Current schedule: ${JSON.stringify(currentSchedule)}\nUser adjustment request: "${adjustments}"\nReturn an updated schedule JSON.`
-    : `Wake time: ${wakeTime}\nTasks for today:\n${(tasks as string[]).map((t, i) => `${i + 1}. ${t}`).join('\n')}\nBuild a time-blocked schedule.`
+    : `Wake time: ${wakeTime}\nTasks for today:\n${(tasks as string[]).map((t, i) => `${i + 1}. ${t}`).join('\n')}${existingBlock}\nBuild a time-blocked schedule.`
 
   try {
     const res = await fetch(GROQ_URL, {

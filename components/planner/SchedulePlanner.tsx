@@ -87,7 +87,7 @@ export default function SchedulePlanner() {
   const [icsUrl, setIcsUrl] = useState('')
 
   const { personalTasks, addTask, setLockedSchedule } = usePlannerStore()
-  const { addEvent, selectedDate } = useCalendarStore()
+  const { addEvent, selectedDate, events: calendarEvents } = useCalendarStore()
 
   const todayTasks = personalTasks.filter((t) => !t.done)
 
@@ -124,6 +124,10 @@ export default function SchedulePlanner() {
       ...extras,
     ]
 
+    const existingEvents = calendarEvents
+      .filter(e => e.date === selectedDate && e.time)
+      .map(e => ({ title: e.title, time: e.time!, duration: 60 }))
+
     try {
       const res = await fetch('/api/schedule', {
         method: 'POST',
@@ -133,6 +137,7 @@ export default function SchedulePlanner() {
           wakeTime,
           currentSchedule: adj ? schedule : undefined,
           adjustments: adj || undefined,
+          existingEvents: existingEvents.length > 0 ? existingEvents : undefined,
         }),
       })
       const data = await res.json()
