@@ -10,7 +10,21 @@ interface GymChecklistProps {
 }
 
 export default function GymChecklist({ day, exercises, editing, onRemove }: GymChecklistProps) {
-  const { toggleExercise } = useFitnessStore()
+  const { toggleExercise, markWorkoutDone, lastStreakDate } = useFitnessStore()
+  const today = new Date().toISOString().split('T')[0]
+
+  function handleToggle(exName: string) {
+    if (editing) return
+    toggleExercise(day, exName)
+    // Compute what the done state will be after the toggle
+    const updatedExercises = exercises.map(e =>
+      e.name === exName ? { ...e, done: !e.done } : e
+    )
+    const allDone = updatedExercises.length > 0 && updatedExercises.every(e => e.done)
+    if (allDone && lastStreakDate !== today) {
+      markWorkoutDone()
+    }
+  }
 
   return (
     <div className="space-y-2">
@@ -21,7 +35,7 @@ export default function GymChecklist({ day, exercises, editing, onRemove }: GymC
             ${ex.done ? 'bg-[#00d084]/10 border-[#00d084]/20' : 'bg-[#F9F9F9] border-[#E5E5EA]'}`}
         >
           <button
-            onClick={() => !editing && toggleExercise(day, ex.name)}
+            onClick={() => handleToggle(ex.name)}
             className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors
               ${ex.done ? 'bg-[#00d084] border-[#00d084]' : 'border-[#C7C7CC]'}`}
           >
@@ -38,7 +52,8 @@ export default function GymChecklist({ day, exercises, editing, onRemove }: GymC
           {editing && onRemove && (
             <button
               onClick={() => onRemove(ex.name)}
-              className="text-[#AEAEB2] active:text-[#ff4d6a] transition-colors p-1"
+              className="text-[#AEAEB2] active:text-[#ff4d6a] transition-colors p-2"
+              aria-label={`Remove ${ex.name}`}
             >
               <Trash2 size={14} />
             </button>
