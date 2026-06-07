@@ -42,6 +42,10 @@ interface FitnessState {
   workoutStreak: number
   lastStreakDate: string
   calorieGoal: number
+  exerciseLog: Record<string, string[]>
+  toggleExerciseLog: (day: string, exName: string) => void
+  isExerciseDone: (day: string, exName: string) => boolean
+  hydrateExerciseLog: (date: string) => Promise<void>
   setGoalWeight: (w: number) => void
   addWeighIn: (weight: number) => void
   toggleExercise: (day: string, exName: string) => void
@@ -109,6 +113,7 @@ export const useFitnessStore = create<FitnessState>()(
       workoutStreak: 0,
       lastStreakDate: '',
       calorieGoal: 2000,
+      exerciseLog: {},
       setGoalWeight: (goalWeight) => set({ goalWeight }),
       addWeighIn: (weight) =>
         set((s) => ({
@@ -173,6 +178,39 @@ export const useFitnessStore = create<FitnessState>()(
           if (s.lastStreakDate === today) return s
           return { workoutStreak: s.workoutStreak + 1, lastStreakDate: today }
         }),
+      toggleExerciseLog: (day, exName) => {
+        const today = new Date().toISOString().split('T')[0]
+        const key = `${day}-${today}`
+        const current = get().exerciseLog[key] ?? []
+        const next = current.includes(exName)
+          ? current.filter(n => n !== exName)
+          : [...current, exName]
+        set((s) => ({ exerciseLog: { ...s.exerciseLog, [key]: next } }))
+        // Sync to Supabase — never rely on localStorage alone
+        sb.from('exercise_log').upsert({
+          log_key: key,
+          exercises: next,
+          created_at: new Date().toISOString(),
+        }).then()
+      },
+      isExerciseDone: (day, exName) => {
+        const today = new Date().toISOString().split('T')[0]
+        const key = `${day}-${today}`
+        return (get().exerciseLog[key] ?? []).includes(exName)
+      },
+      hydrateExerciseLog: async (date: string) => {
+        const { data } = await sb
+          .from('exercise_log')
+          .select('log_key, exercises')
+          .like('log_key', `%-${date}`)
+        if (data && data.length > 0) {
+          const merged: Record<string, string[]> = {}
+          data.forEach((row: { log_key: string; exercises: string[] }) => {
+            merged[row.log_key] = row.exercises
+          })
+          set((s) => ({ exerciseLog: { ...s.exerciseLog, ...merged } }))
+        }
+      },
       setCalorieGoal: (calorieGoal) => set({ calorieGoal }),
       caloriesConsumed: () => {
         const s = get()

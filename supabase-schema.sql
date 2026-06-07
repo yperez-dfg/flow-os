@@ -66,3 +66,12 @@ create table if not exists morning_briefs (
 );
 
 alter table morning_briefs disable row level security;
+
+-- Per-day exercise completion log (log_key = "Mon-2026-06-09", exercises = completed exercise names)
+create table if not exists exercise_log (
+  log_key text primary key,
+  exercises text[] default '{}',
+  created_at text default ''
+);
+
+alter table exercise_log disable row level security;
