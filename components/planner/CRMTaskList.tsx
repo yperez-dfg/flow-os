@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { sb, fromSnake, toSnake, type CRMTask } from '@/lib/supabase'
 import Badge from '@/components/ui/Badge'
 import BottomSheet from '@/components/ui/BottomSheet'
-import { RefreshCw, Plus, Trash2, Pencil, Check } from 'lucide-react'
+import { RefreshCw, Plus, Trash2, Pencil, Check, Sparkles } from 'lucide-react'
 
 const PRIORITIES = ['High', 'Medium', 'Low'] as const
 const priorityColor: Record<string, 'red' | 'amber' | 'slate'> = {
@@ -22,6 +22,12 @@ export default function CRMTaskList({ todayOnly = false }: { todayOnly?: boolean
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState<CRMTask | null>(null)
   const [form, setForm] = useState<Omit<CRMTask, 'id' | 'done'>>(EMPTY)
+  const [coachTask, setCoachTask] = useState<CRMTask | null>(null)
+  const [coachOpen, setCoachOpen] = useState(false)
+  const [coachResult, setCoachResult] = useState<{
+    action: string; urgency: string; message_draft: string; reason: string
+  } | null>(null)
+  const [coachLoading, setCoachLoading] = useState(false)
 
   const fetchTasks = useCallback(async () => {
     setLoading(true)
@@ -79,6 +85,34 @@ export default function CRMTaskList({ todayOnly = false }: { todayOnly?: boolean
     setTasks(prev => prev.filter(t => t.id !== task.id))
   }
 
+  async function handleCoach(task: CRMTask) {
+    setCoachTask(task)
+    setCoachResult(null)
+    setCoachLoading(true)
+    setCoachOpen(true)
+    try {
+      const res = await fetch('/api/crm-coach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: task.related,
+          business: '',
+          stage: task.priority,
+          service: '',
+          value: 0,
+          notes: task.title,
+          daysSinceContact: 0,
+        }),
+      })
+      const data = await res.json()
+      setCoachResult(data)
+    } catch {
+      setCoachResult(null)
+    } finally {
+      setCoachLoading(false)
+    }
+  }
+
   const inputCls = `w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-4 py-4
                     text-[#1D1D1F] placeholder-[#AEAEB2] outline-none focus:border-[#1560FF]/60 text-base`
 
@@ -133,6 +167,15 @@ export default function CRMTaskList({ todayOnly = false }: { todayOnly?: boolean
                 <p className="text-sm font-medium text-[#1D1D1F]">{t.title}</p>
                 {t.related && (
                   <p className="text-[11px] text-[#6E6E73] mt-0.5">{t.related}</p>
+                )}
+                {t.related && (
+                  <button
+                    onClick={() => handleCoach(t)}
+                    className="mt-1 flex items-center gap-1 text-[10px] font-mono font-semibold text-[#1560FF] bg-[#1560FF]/10 px-2 py-1 rounded-full active:scale-90 transition-transform"
+                  >
+                    <Sparkles size={10} />
+                    Coach
+                  </button>
                 )}
               </div>
 
@@ -239,6 +282,62 @@ export default function CRMTaskList({ todayOnly = false }: { todayOnly?: boolean
             </div>
           </div>
         </div>
+      </BottomSheet>
+
+      <BottomSheet
+        open={coachOpen}
+        onClose={() => setCoachOpen(false)}
+        title={`Coach · ${coachTask?.related ?? ''}`}
+        footer={
+          coachResult?.message_draft ? (
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(coachResult.message_draft)
+                setCoachOpen(false)
+              }}
+              className="w-full bg-[#1560FF] text-white font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base"
+            >
+              Copy Message
+            </button>
+          ) : (
+            <button
+              onClick={() => setCoachOpen(false)}
+              className="w-full bg-[#F5F5F7] text-[#1D1D1F] font-semibold py-4 rounded-2xl active:scale-95 transition-transform text-base"
+            >
+              Close
+            </button>
+          )
+        }
+      >
+        {coachLoading ? (
+          <div className="space-y-3 py-4">
+            {[1, 2].map(i => (
+              <div key={i} className="h-4 bg-[#E5E5EA] rounded-full animate-pulse" style={{ width: `${50 + i * 20}%` }} />
+            ))}
+          </div>
+        ) : coachResult ? (
+          <div className="space-y-4">
+            <div>
+              <p className="text-base font-bold text-[#1D1D1F]">{coachResult.action}</p>
+              <p className="text-xs text-[#6E6E73] mt-1">{coachResult.reason}</p>
+            </div>
+            {coachResult.urgency && (
+              <span className={`text-[11px] font-mono font-semibold px-2 py-1 rounded-full
+                ${coachResult.urgency === 'high' ? 'bg-[#ff4d6a]/10 text-[#ff4d6a]'
+                  : coachResult.urgency === 'medium' ? 'bg-[#FF9F0A]/10 text-[#FF9F0A]'
+                  : 'bg-[#C7C7CC]/30 text-[#6E6E73]'}`}>
+                {coachResult.urgency} urgency
+              </span>
+            )}
+            {coachResult.message_draft && (
+              <div className="bg-[#F5F5F7] rounded-2xl px-4 py-4 border-l-4 border-[#1560FF]">
+                <p className="text-sm text-[#1D1D1F] leading-relaxed">{coachResult.message_draft}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-[#6E6E73] text-center py-8">Could not load advice.</p>
+        )}
       </BottomSheet>
     </div>
   )
