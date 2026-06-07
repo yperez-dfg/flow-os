@@ -114,6 +114,7 @@ interface PlannerState {
   longTermGoals: LongTermGoal[]
   routines: Routine[]
   lockedSchedule: { blocks: ScheduleBlock[]; date: string } | null
+  lastResetDate: string
 
   hydrate: () => Promise<void>
 
@@ -121,6 +122,7 @@ interface PlannerState {
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   resetDailyTasks: () => void
+  resetDailyTasksIfNeeded: () => void
 
   addGoal: (g: Omit<WeeklyGoal, 'id'>) => void
   editGoal: (id: string, updates: Partial<Omit<WeeklyGoal, 'id'>>) => void
@@ -148,6 +150,7 @@ export const usePlannerStore = create<PlannerState>()((set, get) => ({
   longTermGoals: [],
   routines: [],
   lockedSchedule: null,
+  lastResetDate: '',
 
   // ── Hydrate from Supabase ──────────────────────────────────────
   hydrate: async () => {
@@ -187,6 +190,12 @@ export const usePlannerStore = create<PlannerState>()((set, get) => ({
     tasks.filter((t) => t.repeat === 'daily').forEach((t) =>
       sb.from('personal_tasks').update({ done: false }).eq('id', t.id).then()
     )
+  },
+  resetDailyTasksIfNeeded: () => {
+    const today = new Date().toISOString().split('T')[0]
+    if (get().lastResetDate === today) return
+    get().resetDailyTasks()
+    set({ lastResetDate: today })
   },
 
   // ── Weekly goals ───────────────────────────────────────────────
