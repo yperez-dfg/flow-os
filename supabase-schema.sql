@@ -56,3 +56,13 @@ alter table weekly_goals disable row level security;
 alter table long_term_goals disable row level security;
 alter table routines disable row level security;
 alter table meal_log disable row level security;
+
+-- Morning Brief daily cache (one row per date, avoids repeat Groq calls)
+create table if not exists morning_briefs (
+  date text primary key,
+  bullets jsonb default '[]',
+  focus text default '',
+  created_at text default ''
+);
+
+alter table morning_briefs disable row level security;
