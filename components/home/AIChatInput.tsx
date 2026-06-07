@@ -7,6 +7,8 @@ import { usePlannerStore } from '@/store/planner'
 import { useCalendarStore } from '@/store/calendar'
 import { useBudgetStore } from '@/store/budget'
 import { useFitnessStore } from '@/store/fitness'
+import { useSettingsStore } from '@/store/settings'
+import { sb, toSnake } from '@/lib/supabase'
 
 interface Toast {
   id: number
@@ -29,6 +31,7 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
   const { addEvent } = useCalendarStore()
   const { addTransaction, addRecurringExpense, categories } = useBudgetStore()
   const { addMeal } = useFitnessStore()
+  const { voiceInput } = useSettingsStore()
 
   // Accept external value from quick-action chips
   useEffect(() => {
@@ -127,6 +130,39 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
           break
         }
 
+        case 'crm_note': {
+          const today = new Date().toISOString().split('T')[0]
+          const { error } = await sb.from('activities').insert(toSnake({
+            type: result.data.activityType,
+            related: result.data.related,
+            content: result.data.content,
+            date: today,
+            createdAt: new Date().toISOString(),
+          }))
+          if (error) {
+            showToast(`Could not log activity: ${error.message}`, 'error')
+          } else {
+            showToast(`✓ ${result.data.activityType} logged: ${result.data.related}`)
+          }
+          break
+        }
+
+        case 'crm_lead': {
+          const today = new Date().toISOString().split('T')[0]
+          const { error } = await sb.from('leads').insert(toSnake({
+            ...result.data,
+            stage: 'New Lead',
+            date: today,
+            notes: '',
+          }))
+          if (error) {
+            showToast(`Could not add lead: ${error.message}`, 'error')
+          } else {
+            showToast(`✓ New lead added: ${result.data.name}`)
+          }
+          break
+        }
+
         default:
           showToast(result.message ?? 'Try: "add rent $1500 recurring on the 2nd"', 'error')
       }
@@ -199,13 +235,15 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
           style={{ overflow: 'hidden' }}
         />
         <div className="flex items-center justify-between px-3 pb-3 pt-1">
-          <button
-            onClick={handleVoice}
-            className="p-2 rounded-full text-[#AEAEB2] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
-            type="button"
-          >
-            <Mic size={16} />
-          </button>
+          {voiceInput && (
+            <button
+              onClick={handleVoice}
+              className="p-2 rounded-full text-[#AEAEB2] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+              type="button"
+            >
+              <Mic size={16} />
+            </button>
+          )}
           <button
             onClick={handleSubmit}
             disabled={!message.trim() || loading}
