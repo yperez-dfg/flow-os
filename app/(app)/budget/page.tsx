@@ -6,18 +6,18 @@ import SpendingChart from '@/components/budget/SpendingChart'
 import TransactionList from '@/components/budget/TransactionList'
 import AddTransactionSheet from '@/components/budget/AddTransactionSheet'
 import RecurringExpenses from '@/components/budget/RecurringExpenses'
+import ManageCategories from '@/components/budget/ManageCategories'
 import { useBudgetStore } from '@/store/budget'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { Plus, Sparkles } from 'lucide-react'
 
 export default function BudgetPage() {
   const [open, setOpen] = useState(false)
-  const { archiveMonth } = useBudgetStore()
+  const { archiveMonth, categories, transactions, recurringExpenses, monthlyIncome } = useBudgetStore()
   const [archiveToast, setArchiveToast] = useState('')
   const [coachOpen, setCoachOpen] = useState(false)
   const [coachText, setCoachText] = useState('')
   const [coachLoading, setCoachLoading] = useState(false)
-  const { categories, transactions, recurringExpenses, monthlyIncome } = useBudgetStore()
 
   useEffect(() => {
     const store = useBudgetStore.getState()
@@ -92,6 +92,8 @@ export default function BudgetPage() {
       </div>
       <BalanceDisplay />
       <RecurringExpenses />
+      <div className="w-full h-px bg-[#E5E5EA]" />
+      <ManageCategories />
       <div className="w-full h-px bg-[#E5E5EA]" />
       <SpendingChart />
       <TransactionList />
