@@ -87,7 +87,7 @@ export default function SchedulePlanner() {
   const [icsUrl, setIcsUrl] = useState('')
 
   const { personalTasks, addTask, setLockedSchedule } = usePlannerStore()
-  const { addEvent, selectedDate, events: calendarEvents } = useCalendarStore()
+  const { addEvent, deleteEvent, selectedDate, events: calendarEvents } = useCalendarStore()
 
   const todayTasks = personalTasks.filter((t) => !t.done)
 
@@ -157,6 +157,11 @@ export default function SchedulePlanner() {
   function lockIn() {
     const now = new Date()
 
+    // Clear any existing personal events for this date to prevent duplicates
+    calendarEvents
+      .filter((e) => e.date === selectedDate && e.type === 'personal')
+      .forEach((e) => deleteEvent(e.id))
+
     schedule.forEach((block) => {
       if (block.type === 'buffer') return
 
@@ -189,7 +194,7 @@ export default function SchedulePlanner() {
 
       const [bh, bm] = block.time.split(':').map(Number)
       const blockDate = new Date(selectedDate + 'T00:00:00')
-      blockDate.setHours(bh, bm - 10, 0, 0)
+      blockDate.setHours(bh, Math.max(0, bm - 10), 0, 0)
       const delay = blockDate.getTime() - now.getTime()
       if (delay > 0) {
         scheduleLocalNotification(`Coming up: ${block.title}`, 'Starts in 10 minutes', delay)

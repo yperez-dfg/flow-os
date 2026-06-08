@@ -74,8 +74,16 @@ export default function AIChatInput({ externalValue, onExternalValueConsumed }: 
 
       switch (result.type) {
         case 'task':
-          addTask(result.data)
-          showToast(`✓ Task added: ${result.data.title}`)
+          addTask({
+            title: result.data.title,
+            priority: result.data.priority ?? 'Medium',
+            done: false,
+            repeat: 'none',
+            due: result.data.due || undefined,
+          })
+          showToast(
+            `✓ Task added: ${result.data.title}${result.data.due ? ` · due ${result.data.due}` : ''}`
+          )
           break
 
         case 'reminder':

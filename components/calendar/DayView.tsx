@@ -2,9 +2,10 @@
 import { useCalendarStore } from '@/store/calendar'
 import { expandEvents } from '@/lib/calendar-utils'
 import Badge from '@/components/ui/Badge'
+import { Trash2 } from 'lucide-react'
 
 export default function DayView() {
-  const { selectedDate, events } = useCalendarStore()
+  const { selectedDate, events, deleteEvent } = useCalendarStore()
   const dayEvents = expandEvents(events, selectedDate, selectedDate)
     .sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))
 
@@ -35,6 +36,13 @@ export default function DayView() {
               {e.time}
             </p>
           )}
+          <button
+            onClick={() => deleteEvent(e.id)}
+            className="text-[#AEAEB2] active:text-[#ff4d6a] transition-colors p-1 flex-shrink-0 -mr-1"
+            aria-label="Delete event"
+          >
+            <Trash2 size={14} />
+          </button>
         </div>
       ))}
     </div>

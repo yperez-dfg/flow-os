@@ -10,7 +10,7 @@ The user types natural-language commands. Parse the intent and return ONLY valid
 Use EXACTLY one of these shapes:
 
 Task:
-{ "type": "task", "data": { "title": "...", "priority": "High|Medium|Low", "done": false, "repeat": "none" } }
+{ "type": "task", "data": { "title": "...", "priority": "High|Medium|Low", "done": false, "repeat": "none", "due": "YYYY-MM-DD or empty string" } }
 
 Reminder / Calendar event:
 { "type": "reminder", "data": { "title": "...", "date": "YYYY-MM-DD", "time": "HH:MM", "color": "#1560FF", "repeat": "none|daily|weekly|monthly", "notify": true, "notifyMinutesBefore": 15, "type": "personal" } }
@@ -38,6 +38,12 @@ Unknown / unclear:
 
 Rules:
 - TODAY is ${today}. Use 24-hour HH:MM times.
+- "add task X for tomorrow" → task, due: TODAY + 1 day in YYYY-MM-DD
+- "add task X for Friday" / "for next Monday" → task, due: nearest upcoming weekday in YYYY-MM-DD
+- "add task X for June 15" or "for June 15th" → task, due: current year YYYY-06-15
+- "add task X in 3 days" → task, due: TODAY + 3 days in YYYY-MM-DD
+- "add task X" with no date → task, due: ""
+- Always resolve relative date words (tomorrow, next week, Monday, etc.) to absolute YYYY-MM-DD
 - "Rent $1500 due on the 2nd" → recurring_expense, dueDay: 2, category: "Rent"
 - "Add rent $1500 every month on the 2nd" → same
 - "I spent $40 on food" → expense (one-time)
