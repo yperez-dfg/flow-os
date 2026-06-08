@@ -12,11 +12,11 @@ type PlannerView = 'today' | 'all'
 
 export default function PlannerPage() {
   const [planView, setPlanView] = useState<PlannerView>('today')
-  const { resetDailyTasksIfNeeded } = usePlannerStore()
+  const { resetDailyTasksIfNeeded, hydrate } = usePlannerStore()
 
   useEffect(() => {
-    resetDailyTasksIfNeeded()
-  }, [resetDailyTasksIfNeeded])
+    hydrate().then(() => resetDailyTasksIfNeeded())
+  }, [hydrate, resetDailyTasksIfNeeded])
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] px-4 pt-6 pb-24 space-y-6">

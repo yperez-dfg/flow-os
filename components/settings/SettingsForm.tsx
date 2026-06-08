@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSettingsStore } from '@/store/settings'
 import { sb } from '@/lib/supabase'
 import GlassCard from '@/components/ui/GlassCard'
@@ -23,10 +23,11 @@ export default function SettingsForm() {
 
   const [crmStatus, setCrmStatus] = useState<CRMStatus>('idle')
   const [copied, setCopied] = useState(false)
+  const [feedUrl, setFeedUrl] = useState('https://daily-planner-pi-ten.vercel.app/api/calendar/feed')
 
-  const feedUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/api/calendar/feed`
-    : 'https://daily-planner-pi-ten.vercel.app/api/calendar/feed'
+  useEffect(() => {
+    setFeedUrl(`${window.location.origin}/api/calendar/feed`)
+  }, [])
 
   const copyFeedUrl = () => {
     navigator.clipboard.writeText(feedUrl)

@@ -10,11 +10,15 @@ import { buildWorkoutEvents } from '@/lib/workout-calendar-sync'
 import { CalendarDays, Check } from 'lucide-react'
 
 export default function FitnessPage() {
-  const { workoutSchedule, hydrateMeals } = useFitnessStore()
+  const { workoutSchedule, hydrateMeals, hydrateExerciseLog } = useFitnessStore()
   const { addEvent } = useCalendarStore()
   const [synced, setSynced] = useState(false)
 
-  useEffect(() => { hydrateMeals() }, [hydrateMeals])
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    hydrateMeals()
+    hydrateExerciseLog(today)
+  }, [hydrateMeals, hydrateExerciseLog])
 
   const syncToCalendar = () => {
     const events = buildWorkoutEvents(workoutSchedule)
